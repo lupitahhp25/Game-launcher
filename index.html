@@ -222,7 +222,12 @@ function pad(){
 requestAnimationFrame(pad);
 
 // ===== Puente con Android (plugin nativo Launcher) =====
-const Launcher = (window.Capacitor && Capacitor.registerPlugin) ? Capacitor.registerPlugin('Launcher') : null;
+const Launcher = (() => {
+  const C = window.Capacitor; if (!C) return null;
+  if (C.Plugins && C.Plugins.Launcher) return C.Plugins.Launcher;
+  if (C.registerPlugin) { try { return C.registerPlugin('Launcher'); } catch (e) {} }
+  return null;
+})();
 const EMU = {
   PS2: { activity:'xyz.aethersx2.android.EmulationActivity', action:'android.intent.action.MAIN', extraKey:'bootPath' },
   PSP: { activity:'org.ppsspp.ppsspp.PpssppActivity', action:'android.intent.action.VIEW', data:true },
@@ -255,7 +260,7 @@ function openScan(){
 }
 async function runScan(){
   const out = $('sr');
-  if (!Launcher) { out.textContent = 'Esto solo funciona dentro de la app Android.'; return; }
+  if (!Launcher) { out.textContent = 'No se encontró el puente con Android (Capacitor: ' + (window.Capacitor ? 'sí' : 'no') + ').'; return; }
   const path = $('sp').value.trim(), pl = $('ss').value; lastPath = path; lastPlat = pl;
   try {
     const p = await Launcher.hasAllFiles();
