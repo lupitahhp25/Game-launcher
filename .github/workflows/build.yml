@@ -27,6 +27,7 @@ jobs:
         run: |
           mkdir -p www
           cp index.html www/index.html
+          cp icon.png www/icon.png
           if curl -fsSL https://cdn.tailwindcss.com/3.4.17 -o www/tailwind.js; then
             sed -i 's|https://cdn.tailwindcss.com/3.4.17|tailwind.js|' www/index.html
           fi
