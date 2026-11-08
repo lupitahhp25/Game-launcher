@@ -43,7 +43,7 @@ jobs:
           mkdir -p $PKG
           cp LauncherPlugin.java MainActivity.java $PKG/
           M=android/app/src/main/AndroidManifest.xml
-          sed -i 's|<application|<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>\n    <application|' $M
+          sed -i 's|<application|<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>\n    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>\n    <application|' $M
           sed -i 's|<activity|<activity android:screenOrientation="sensorLandscape"|' $M
 
       - name: Poner el icono de la app
