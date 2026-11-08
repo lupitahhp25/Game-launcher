@@ -39,6 +39,10 @@
   #app.enter #row { animation:rise .8s .15s both; }
   #app.enter #hero { animation:rise .8s .3s both; }
   #app.enter footer { animation:rise .8s .45s both; }
+  .qrow { display:flex; align-items:center; gap:.7rem; width:100%; padding:.7rem .9rem; border-radius:1.2rem; font-size:.85rem; text-align:left; transition:background .15s; }
+  .qrow:hover { background:rgba(255,255,255,.12); }
+  #qmenu, #opts { background:rgba(18,26,48,.88); backdrop-filter:blur(30px); border:1px solid rgba(255,255,255,.14); box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  .avbtn { width:clamp(34px,9vh,46px); height:clamp(34px,9vh,46px); border-radius:9999px; background:linear-gradient(135deg,#5b8cff,#6a4cff) center/cover; box-shadow:0 0 0 2px rgba(255,255,255,.55); font-weight:500; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -55,15 +59,19 @@
         <div id="cats" class="flex items-center gap-7 overflow-x-auto no-scrollbar pt-1"></div>
         <button id="r1" class="hidden"></button>
       </nav>
-      <div class="flex items-center gap-2.5 flex-shrink-0">
-        <span id="gpad" class="text-[11px] text-white/50 hidden sm:inline">🎮</span>
-        <button id="scanbtn" class="gbtn" title="Escanear ROMs">📁</button>
-        <button id="ssbtn" class="gbtn" title="ScreenScraper / Carátulas">🗄️</button>
+      <div class="flex items-center gap-3 flex-shrink-0 relative">
         <button id="srch" class="gbtn" title="Buscar">🔍</button>
-        <button id="mute" class="gbtn" title="Sonido">🔇</button>
-        <button id="fs" class="gbtn" title="Pantalla completa">⛶</button>
-        <span id="clock" class="text-lg font-light ml-2"></span>
-        <span class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-400 ring-2 ring-white/40"></span>
+        <button id="menubtn" class="gbtn" title="Menú">☰</button>
+        <span id="clock" class="text-lg font-light"></span>
+        <button id="avatar" class="avbtn" title="Perfil"></button>
+        <div id="qmenu" class="hidden absolute right-0 top-full mt-3 z-30 w-64 rounded-3xl p-2">
+          <button id="scanbtn" class="qrow"><span class="w-6 text-center">📁</span>Escanear ROMs</button>
+          <button id="ssbtn" class="qrow"><span class="w-6 text-center">🗄️</span>Carátulas y datos</button>
+          <button id="profbtn" class="qrow"><span class="w-6 text-center">👤</span>Perfil y foto</button>
+          <button id="mute" class="qrow"><span class="w-6 text-center">🔇</span>Sonido: apagado</button>
+          <button id="fs" class="qrow"><span class="w-6 text-center">⛶</span>Pantalla completa</button>
+          <div id="gpad" class="px-4 py-2 text-xs text-white/50">🎮 Conectar mando</div>
+        </div>
       </div>
     </header>
 
@@ -93,8 +101,8 @@
     <div id="i-welcome" class="absolute inset-0 flex flex-col items-center justify-center text-center" style="opacity:0;transform:translateY(10px);transition:all .8s ease">
       <h2 class="font-light" style="font-size:clamp(1.3rem,5vh,2.2rem)">Bienvenido de nuevo</h2>
       <p class="text-white/50 text-sm mt-1">¿Quién usa este mando?</p>
-      <div class="i-avatar"></div>
-      <p class="text-white/85 mt-3">Jugador 1</p>
+      <div id="i-av" class="i-avatar"></div>
+      <p id="i-name" class="text-white/85 mt-3">Jugador 1</p>
     </div>
   </div>
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 hidden bg-white/15 backdrop-blur-xl text-xs font-medium px-5 py-2 rounded-full border border-white/20"></div>
@@ -114,22 +122,10 @@ const PLATFORMS = {
   XBOX:{name:'Xbox Clásico',code:'XBOX',color:'bg-green-700'}
 };
 const CATS = ['ALL','NATIVE APPS','EMULATORS','FAVORITES','RECENTLY PLAYED'];
-const games = [
-  {id:1,title:'The Last of Us Part II Remastered',type:'NATIVE',platform:'ANDROID',publisher:'Naughty Dog',year:'2024',fav:true,played:true,g:['#14532d','#052e16'],desc:'Cinco años después de su peligroso viaje, Ellie y Joel se han establecido en Jackson, Wyoming.',pkg:'com.sony.tlou2.android',rom:'N/A (App nativa)',emu:'Native Android Package'},
-  {id:2,title:'God of War II',type:'EMULATOR',platform:'PS2',publisher:'Santa Monica Studio',year:'2007',fav:true,played:true,g:['#7f1d1d','#1e1b4b'],desc:'Kratos, el nuevo Dios de la Guerra, busca venganza contra Zeus y los olímpicos que lo traicionaron.',pkg:'xyz.aethersx2.android',rom:'/storage/emulated/0/RetroGames/PS2/God_of_War_II.iso',emu:'AetherSX2 / NetherSX2'},
-  {id:3,title:'God of War: Chains of Olympus',type:'EMULATOR',platform:'PSP',publisher:'Ready at Dawn',year:'2008',fav:false,played:true,g:['#312e81','#0f172a'],desc:'Durante los 10 años de servicio de Kratos a los dioses, combate al ejército persa.',pkg:'org.ppsspp.ppsspp',rom:'/storage/emulated/0/Emulation/ROMs/PSP/GoW_CoO.cso',emu:'PPSSPP Gold'},
-  {id:4,title:'The Legend of Zelda: Breath of the Wild',type:'EMULATOR',platform:'SWITCH',publisher:'Nintendo',year:'2017',fav:true,played:true,g:['#0e7490','#14532d'],desc:'Un mundo de descubrimiento, exploración y aventura que rompe todos los límites.',pkg:'org.yuzu.yuzu_emu',rom:'/storage/emulated/0/SwitchROMs/Zelda_BotW.nsp',emu:'Yuzu / Suyu / Eden'}
-];
+const games = [];
 const U = (id,w)=>`https://images.unsplash.com/photo-${id}?q=80&w=${w}&auto=format&fit=crop`;
 const V = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/';
-const MEDIA = {
-  1:{img:U('1542751371-adc38448a05e',600),wall:U('1518709268805-4e9042af9f23',1600),vid:V+'TearsOfSteel.mp4'},
-  2:{img:U('1579783902614-a3fb3927b675',600),wall:U('1509198397868-475647b2a1e5',1600),vid:V+'Sintel.mp4'},
-  3:{img:U('1511512578047-dfb367046420',600),wall:U('1451187580459-43490279c0fa',1600),vid:V+'ElephantsDream.mp4'},
-  4:{img:U('1534447677768-be436bb09401',600),wall:U('1518709268805-4e9042af9f23',1600),vid:V+'BigBuckBunny.mp4'}
-};
-games.forEach(g => Object.assign(g, MEDIA[g.id]));
-try { const sv = JSON.parse(localStorage.getItem('gl_games') || 'null'); if (Array.isArray(sv) && sv.length) { games.length = 0; sv.forEach(x => games.push(x)); } } catch(e) {}
+try { const sv = JSON.parse(localStorage.getItem('gl_games') || 'null'); const keep = Array.isArray(sv) ? sv.filter(x => typeof x.id === 'string') : []; keep.forEach(x => games.push(x)); if (Array.isArray(sv) && keep.length !== sv.length) save(); } catch(e) {}
 function save(){ try { localStorage.setItem('gl_games', JSON.stringify(games)); } catch(e) {} }
 let cat = 'ALL', plat = 'ALL', idx = 0, q = '';
 const $ = id => document.getElementById(id);
@@ -148,22 +144,34 @@ function render(){
   const cur = gs[idx];
   $('cats').innerHTML = CATS.map(c => `<button data-c="${c}" class="relative pb-2 text-base whitespace-nowrap transition ${c===cat?'text-white font-semibold':'text-white/45 hover:text-white/80'}">${CAT_LABEL[c]}${c===cat?'<span class="absolute left-1/2 bottom-0 w-1.5 h-1.5 -translate-x-1/2 rounded-full bg-white"></span>':''}</button>`).join('');
   $('plats').innerHTML = `<button data-p="ALL" class="px-3 py-1 rounded-full text-[11px] whitespace-nowrap ${plat==='ALL'?'bg-white text-black font-semibold':'bg-white/10 text-white/70'}">Todos</button>` +
-    Object.entries(PLATFORMS).map(([k,p]) => `<button data-p="${k}" class="px-3 py-1 rounded-full text-[11px] whitespace-nowrap ${plat===k?'bg-white text-black font-semibold':'bg-white/10 text-white/70'}">${p.code}</button>`).join('');
+    Object.entries(PLATFORMS).filter(([k]) => games.some(g => g.platform === k)).map(([k,p]) => `<button data-p="${k}" class="px-3 py-1 rounded-full text-[11px] whitespace-nowrap ${plat===k?'bg-white text-black font-semibold':'bg-white/10 text-white/70'}">${p.code}</button>`).join('');
   $('bg').style.background = cur ? `${cur.wall?`url('${cur.wall}') center/cover, `:''}${grad(cur.g)}` : '#000a1e';
   $('bg').style.filter = 'brightness(.55) saturate(1.15)';
   const v = $('vid');
   if (cur && cur.vid && v.dataset.s !== cur.vid) { v.dataset.s = cur.vid; v.src = cur.vid; v.play().catch(()=>{}); v.style.opacity = 1; v.onerror = () => v.style.opacity = 0; } else if (!cur || !cur.vid) { v.style.opacity = 0; v.dataset.s = ''; }
-  if (!cur){ $('hero').innerHTML = '<p class="text-white/60 text-lg">No hay juegos aquí. Toca 📁 para escanear tus ROMs.</p>'; $('row').innerHTML=''; return; }
+  if (!cur){
+    $('row').innerHTML = '';
+    $('hero').innerHTML = games.length
+      ? '<p class="text-white/60 text-lg">No hay juegos en esta categoría.</p>'
+      : '<p class="text-3xl md:text-4xl font-light mb-2">Tu biblioteca está vacía</p><p class="text-white/60 text-sm mb-5 max-w-md">Elige la carpeta donde guardas tus juegos y el launcher los agrega solo.</p><button id="emptyscan" class="playbtn rounded-full bg-white text-black font-semibold">📁 Escanear ROMs</button>';
+    const eb = $('emptyscan'); if (eb) eb.onclick = openScan;
+    return;
+  }
   const p = PLATFORMS[cur.platform] || PLATFORMS.ANDROID;
   $('hero').innerHTML = `
     <p class="text-[11px] tracking-[.25em] uppercase text-white/60">${p.name} · ${cur.type==='NATIVE'?'App nativa':'Emulador'}</p>
     <h1 class="ttl font-light tracking-tight leading-tight mt-1 drop-shadow-xl">${clean(cur.title)}</h1>
     <div class="flex items-center gap-3 mt-4">
       <button id="play" class="playbtn rounded-full bg-white text-black font-semibold shadow-[0_0_35px_rgba(255,255,255,.35)] hover:scale-105 active:scale-95 transition">▶ Jugar</button>
-      <button id="ai" class="gbtn" title="Optimizador IA">✨</button>
-      <button id="scrape" class="gbtn" title="Scrapear">🔄</button>
       <button id="fav" class="gbtn ${cur.fav?'!bg-yellow-400/30 !border-yellow-300/60':''}" title="Favorito">${cur.fav?'★':'☆'}</button>
-      <button id="del" class="gbtn" title="Quitar de la biblioteca">🗑️</button>
+      <div class="relative">
+        <button id="more" class="gbtn" title="Más opciones">⋯</button>
+        <div id="opts" class="hidden absolute left-0 bottom-full mb-2 z-20 w-56 rounded-3xl p-2">
+          <button id="ai" class="qrow"><span class="w-6 text-center">✨</span>Optimizador IA</button>
+          <button id="scrape" class="qrow"><span class="w-6 text-center">🔄</span>Carátulas y datos</button>
+          <button id="del" class="qrow !text-red-300"><span class="w-6 text-center">🗑️</span>Quitar de la biblioteca</button>
+        </div>
+      </div>
     </div>
     <div class="mt-4 max-w-xl rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-3">
       <p class="desc text-sm text-white/85 leading-snug">${cur.desc || ''}</p>
@@ -177,6 +185,7 @@ function render(){
     </div>`; }).join('');
   const sel = $('row').children[idx]; if (sel) sel.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
   $('play').onclick = () => openModal(cur,'launch');
+  $('more').onclick = () => $('opts').classList.toggle('hidden');
   $('ai').onclick = () => openModal(cur,'ai');
   $('scrape').onclick = openSS;
   $('fav').onclick = () => { cur.fav = !cur.fav; save(); render(); };
@@ -204,6 +213,8 @@ function openModal(g, kind){
 function closeModal(){ const m=$('modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
 
 document.addEventListener('click', e => {
+  if (!e.target.closest('#more')) { const o = $('opts'); if (o) o.classList.add('hidden'); }
+  if (!e.target.closest('#menubtn') && !e.target.closest('#qmenu') || e.target.closest('.qrow')) $('qmenu').classList.add('hidden');
   const c = e.target.closest('[data-c]'), p = e.target.closest('[data-p]'), i = e.target.closest('[data-i]');
   if (c){ cat=c.dataset.c; idx=0; render(); }
   else if (p){ plat=p.dataset.p; idx=0; render(); }
@@ -241,10 +252,13 @@ async function goFS(){
   } catch(e) { toast('Gira tu pantalla manualmente'); }
 }
 $('srch').onclick = openSearch;
+$('menubtn').onclick = () => $('qmenu').classList.toggle('hidden');
+$('profbtn').onclick = openProfile;
+$('avatar').onclick = openProfile;
 $('scanbtn').onclick = openScan;
 $('ssbtn').onclick = openSS;
 $('fs').onclick = goFS;
-$('mute').onclick = () => { const v = $('vid'); v.muted = !v.muted; $('mute').textContent = v.muted ? '🔇' : '🔊'; };
+$('mute').onclick = () => { const v = $('vid'); v.muted = !v.muted; $('mute').innerHTML = '<span class="w-6 text-center">' + (v.muted ? '🔇' : '🔊') + '</span>Sonido: ' + (v.muted ? 'apagado' : 'activado'); };
 
 // Gamepad (Bluetooth / USB)
 let gpLast = 0;
@@ -467,6 +481,52 @@ function enterHome(){
   }, 2600);
 }
 $('intro').addEventListener('click', enterHome);
+
+
+// ===== Perfil (foto y nombre) =====
+let profile = { name:'Jugador 1', photo:'' };
+try { Object.assign(profile, JSON.parse(localStorage.getItem('gl_profile') || '{}')); } catch(e) {}
+function saveProfile(){ try { localStorage.setItem('gl_profile', JSON.stringify(profile)); } catch(e) {} }
+function applyProfile(){
+  const av = $('avatar'), ia = $('i-av');
+  if (profile.photo) { av.style.background = `url('${profile.photo}') center/cover`; av.textContent = ''; ia.style.background = `url('${profile.photo}') center/cover`; }
+  else { av.style.background = ''; av.textContent = (profile.name || 'J').trim().charAt(0).toUpperCase(); ia.style.background = ''; }
+  $('i-name').textContent = profile.name || 'Jugador 1';
+}
+function paintPrev(){ const p = $('pfprev'); if (!p) return; p.style.background = profile.photo ? `url('${profile.photo}') center/cover` : ''; p.textContent = profile.photo ? '' : (profile.name || 'J').trim().charAt(0).toUpperCase(); }
+function loadPhoto(file){
+  if (!file) return;
+  const fr = new FileReader();
+  fr.onload = () => { const img = new Image(); img.onload = () => {
+    const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
+    const m = Math.min(img.width, img.height);
+    c.getContext('2d').drawImage(img, (img.width-m)/2, (img.height-m)/2, m, m, 0, 0, S, S);
+    profile.photo = c.toDataURL('image/jpeg', .85); saveProfile(); applyProfile(); paintPrev(); toast('📷 Foto actualizada');
+  }; img.src = fr.result; };
+  fr.readAsDataURL(file);
+}
+function openProfile(){
+  const m = $('modal'); m.classList.remove('hidden'); m.classList.add('flex'); m.style.alignItems = '';
+  m.innerHTML = `<div class="w-full max-w-sm p-6 text-center">
+    <h3 class="text-lg font-semibold mb-4">👤 Tu perfil</h3>
+    <div id="pfprev" class="avbtn mx-auto" style="width:7rem;height:7rem;font-size:2.4rem"></div>
+    <input id="pf" type="file" accept="image/*" class="hidden">
+    <div class="flex justify-center gap-2 mt-4">
+      <button id="pfpick" class="px-4 py-2 bg-white/15 rounded-full text-xs font-semibold">📷 Elegir foto</button>
+      <button id="pfdel" class="px-4 py-2 bg-white/10 rounded-full text-xs">Quitar foto</button>
+    </div>
+    <input id="pfname" value="${profile.name.replace(/"/g,'&quot;')}" maxlength="18" placeholder="Tu nombre" class="w-full mt-4 bg-black/40 border border-white/20 rounded-xl p-2 text-sm text-center outline-none">
+    <div class="flex justify-center gap-2 mt-5">
+      <button onclick="closeModal()" class="px-5 py-2 bg-white/10 rounded-full text-xs">Cerrar</button>
+      <button id="pfsave" class="px-6 py-2 bg-white text-black rounded-full text-xs font-semibold">Guardar</button>
+    </div></div>`;
+  paintPrev();
+  $('pfpick').onclick = () => $('pf').click();
+  $('pf').onchange = e => loadPhoto(e.target.files[0]);
+  $('pfdel').onclick = () => { profile.photo = ''; saveProfile(); applyProfile(); paintPrev(); };
+  $('pfsave').onclick = () => { profile.name = $('pfname').value.trim() || 'Jugador 1'; saveProfile(); applyProfile(); closeModal(); toast('✅ Perfil guardado'); };
+}
+applyProfile();
 
 render();
 </script>
