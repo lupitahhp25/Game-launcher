@@ -1,6 +1,7 @@
 {
   "appId": "com.gamelauncher.app",
-  "appName": "Game Launcher",
+  "appName": "PS5 Launcher",
   "webDir": "www",
-  "server": { "androidScheme": "https" }
+  "server": { "androidScheme": "https" },
+  "plugins": { "CapacitorHttp": { "enabled": true } }
 }

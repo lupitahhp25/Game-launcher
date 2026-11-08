@@ -43,6 +43,7 @@
       <div class="flex items-center gap-2.5 flex-shrink-0">
         <span id="gpad" class="text-[11px] text-white/50 hidden sm:inline">🎮</span>
         <button id="scanbtn" class="gbtn" title="Escanear ROMs">📁</button>
+        <button id="ssbtn" class="gbtn" title="ScreenScraper / Carátulas">🗄️</button>
         <button id="srch" class="gbtn" title="Buscar">🔍</button>
         <button id="mute" class="gbtn" title="Sonido">🔇</button>
         <button id="fs" class="gbtn" title="Pantalla completa">⛶</button>
@@ -145,7 +146,7 @@ function render(){
   const sel = $('row').children[idx]; if (sel) sel.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
   $('play').onclick = () => openModal(cur,'launch');
   $('ai').onclick = () => openModal(cur,'ai');
-  $('scrape').onclick = () => toast('🔄 Scrapeando medios de ' + cur.title + '…');
+  $('scrape').onclick = openSS;
   $('fav').onclick = () => { cur.fav = !cur.fav; save(); render(); };
   $('del').onclick = () => { if (confirm('¿Quitar "' + cur.title + '" de la biblioteca?')) { games.splice(games.indexOf(cur), 1); idx = 0; save(); render(); } };
 }
@@ -187,7 +188,7 @@ document.addEventListener('keydown', e => {
   else if (e.key==='q'||e.key==='Q') shiftCat(-1);
   else if (e.key==='e'||e.key==='E') shiftCat(1);
   else if (e.key==='Enter'){ const g=list()[idx]; if (g) openModal(g,'launch'); }
-  else if (e.key==='s'||e.key==='S'){ const g=list()[idx]; if (g) toast('🔄 Scrapeando ' + g.title + '…'); }
+  else if (e.key==='s'||e.key==='S'){ const g=list()[idx]; if (g) openSS(); }
 });
 function tick(){ const d=new Date(); $('clock').textContent = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 function fit(){ const u = Math.min(innerHeight/34, innerWidth/62); document.documentElement.style.fontSize = Math.max(11, Math.min(18, u)) + 'px'; }
@@ -208,6 +209,7 @@ async function goFS(){
 }
 $('srch').onclick = openSearch;
 $('scanbtn').onclick = openScan;
+$('ssbtn').onclick = openSS;
 $('fs').onclick = goFS;
 $('mute').onclick = () => { const v = $('vid'); v.muted = !v.muted; $('mute').textContent = v.muted ? '🔇' : '🔊'; };
 
@@ -226,7 +228,7 @@ function pad(){
     else if (b(4)) shiftCat(-1);
     else if (b(5)) shiftCat(1);
     else if (b(0)) { const g = list()[idx]; if (g) openModal(g,'launch'); }
-    else if (b(2)) { const g = list()[idx]; if (g) toast('🔄 Scrapeando ' + g.title + '…'); }
+    else if (b(2)) { const g = list()[idx]; if (g) openSS(); }
     else act = false;
     if (act) gpLast = Date.now();
   }
@@ -298,6 +300,97 @@ async function runScan(){
     save(); idx = 0; render();
     out.textContent = n + ' juegos nuevos agregados (' + r.files.length + ' encontrados).';
   } catch (e) { out.textContent = '⚠️ ' + (e.message || e); }
+}
+
+
+// ===== ScreenScraper + carátulas gratuitas (Libretro) =====
+const SSYS = { PS2:58, PSP:61, SWITCH:225, GAMECUBE:13, N3DS:17, GBA:12, XBOX:32 };
+const LIBR = { PS2:'Sony - PlayStation 2', PSP:'Sony - PlayStation Portable', SWITCH:'Nintendo - Switch', GAMECUBE:'Nintendo - GameCube', N3DS:'Nintendo - Nintendo 3DS', GBA:'Nintendo - Game Boy Advance', XBOX:'Microsoft - Xbox' };
+let cred = { user:'', pass:'', devid:'', devpass:'' };
+try { Object.assign(cred, JSON.parse(localStorage.getItem('gl_ss') || '{}')); } catch(e) {}
+let sopt = { covers:true, fondo:true, video:false, sinopsis:true };
+let scraping = false;
+const hasSS = () => cred.user && cred.pass && cred.devid && cred.devpass;
+const probe = url => new Promise(res => { const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = url; });
+const pickMedia = (m, type) => {
+  const L = (m || []).filter(x => x.type === type); if (!L.length) return null;
+  for (const r of ['us','wor','eu','ss','jp']) { const f = L.find(x => x.region === r); if (f) return f.url; }
+  return L[0].url;
+};
+async function ssLookup(g){
+  const q = new URLSearchParams({ devid:cred.devid, devpassword:cred.devpass, softname:'PS5Launcher', output:'json', ssid:cred.user, sspassword:cred.pass, systemeid:SSYS[g.platform], romtype:'rom', romnom:(g.rom || '').split('/').pop() });
+  const r = await fetch('https://api.screenscraper.fr/api2/jeuInfos.php?' + q);
+  const t = await r.text();
+  let j; try { j = JSON.parse(t); } catch(e) { throw new Error(t.replace(/<[^>]+>/g,'').trim().slice(0,90) || 'Respuesta inválida'); }
+  return j.response && j.response.jeu;
+}
+async function scrapeOne(g){
+  let jeu = null, err = null, got = false;
+  if (hasSS() && SSYS[g.platform]) { try { jeu = await ssLookup(g); } catch(e) { err = e.message; } }
+  const has = { c:false, f:false };
+  if (jeu) {
+    const m = jeu.medias || [];
+    if (sopt.covers) { const u = pickMedia(m,'box-2D'); if (u) { g.img = u; has.c = true; got = true; } }
+    if (sopt.fondo) { const u = pickMedia(m,'ss') || pickMedia(m,'fanart'); if (u) { g.wall = u; has.f = true; got = true; } }
+    if (sopt.video) { const u = pickMedia(m,'video-normalized') || pickMedia(m,'video'); if (u) { g.vid = u; got = true; } }
+    if (sopt.sinopsis) {
+      const sy = jeu.synopsis || [], t = (sy.find(x => x.langue === 'es') || sy.find(x => x.langue === 'en') || {}).text;
+      if (t) { g.desc = t; got = true; }
+      if (jeu.editeur && jeu.editeur.text) g.publisher = jeu.editeur.text;
+    }
+  }
+  const lib = LIBR[g.platform];
+  if (lib && ((sopt.covers && !has.c) || (sopt.fondo && !has.f))) {
+    const name = encodeURIComponent(clean((g.rom || g.title).split('/').pop()).replace(/[&*\/:`<>?\\|]/g, '_'));
+    const base = 'https://thumbnails.libretro.com/' + encodeURIComponent(lib) + '/';
+    if (sopt.covers && !has.c) { const u = base + 'Named_Boxarts/' + name + '.png'; if (await probe(u)) { g.img = u; got = true; } }
+    if (sopt.fondo && !has.f) { const u = base + 'Named_Snaps/' + name + '.png'; if (await probe(u)) { g.wall = u; got = true; } }
+  }
+  g.scraped = got;
+  return { got, err };
+}
+function readSS(){
+  const v = id => $(id) ? $(id).value.trim() : '';
+  cred = { user:v('ssu'), pass:v('ssp'), devid:v('ssd'), devpass:v('ssdp') };
+  try { localStorage.setItem('gl_ss', JSON.stringify(cred)); } catch(e) {}
+  const c = id => $(id) && $(id).checked;
+  sopt = { covers:c('ck_c'), fondo:c('ck_f'), video:c('ck_v'), sinopsis:c('ck_s') };
+}
+async function runScrape(items){
+  if (scraping) return; readSS();
+  const out = $('ssr'); items = items.filter(g => g.type !== 'NATIVE');
+  if (!items.length) { out.textContent = 'No hay juegos de emulador para scrapear.'; return; }
+  scraping = true; let ok = 0, lastErr = null;
+  for (let i = 0; i < items.length; i++) {
+    out.textContent = '(' + (i+1) + '/' + items.length + ') ' + clean(items[i].title) + '…';
+    const r = await scrapeOne(items[i]);
+    if (r.got) ok++; if (r.err) lastErr = r.err;
+    save(); render();
+    if (hasSS()) await new Promise(r => setTimeout(r, 1300));
+  }
+  scraping = false;
+  out.textContent = ok + ' de ' + items.length + ' juegos actualizados.' + (lastErr ? ' ScreenScraper dijo: ' + lastErr : '');
+}
+function openSS(){
+  const m = $('modal'); m.classList.remove('hidden'); m.classList.add('flex'); m.style.alignItems = '';
+  const inp = (id, ph, val, type) => `<input id="${id}" type="${type||'text'}" value="${val}" placeholder="${ph}" class="w-full min-w-0 bg-black/40 border border-white/20 rounded-lg p-2 text-xs outline-none">`;
+  const ck = (id, label, on) => `<label class="flex items-center gap-2 text-xs"><input id="${id}" type="checkbox" ${on?'checked':''} class="w-4 h-4 accent-blue-500">${label}</label>`;
+  m.innerHTML = `<div class="w-full max-w-lg p-5 max-h-full overflow-y-auto no-scrollbar">
+    <h3 class="text-lg font-semibold mb-1">🗄️ Carátulas y datos</h3>
+    <p class="text-[11px] text-white/60 mb-3">Sin cuenta se usan las carátulas gratuitas de Libretro. Con tu cuenta y claves de ScreenScraper se descarga más (sinopsis, video).</p>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      ${inp('ssu','Usuario ScreenScraper',cred.user)}${inp('ssp','Contraseña',cred.pass,'password')}
+      ${inp('ssd','Dev ID',cred.devid)}${inp('ssdp','Dev Password',cred.devpass,'password')}
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-3">${ck('ck_c','Carátulas',sopt.covers)}${ck('ck_f','Fondo (captura)',sopt.fondo)}${ck('ck_s','Sinopsis',sopt.sinopsis)}${ck('ck_v','Video (pesado)',sopt.video)}</div>
+    <p id="ssr" class="text-xs text-white/80 mb-3 min-h-[1rem]">Listo.</p>
+    <div class="flex flex-wrap justify-end gap-2">
+      <button onclick="readSS();closeModal()" class="px-4 py-2 bg-white/10 rounded-full text-xs">Cerrar</button>
+      <button id="ssgo" class="px-4 py-2 bg-white/20 rounded-full text-xs font-semibold">Este juego</button>
+      <button id="ssall" class="px-5 py-2 bg-white text-black rounded-full text-xs font-semibold">Toda la biblioteca</button>
+    </div></div>`;
+  $('ssgo').onclick = () => { const g = list()[idx]; if (g) runScrape([g]); };
+  $('ssall').onclick = () => runScrape(games.slice());
 }
 
 render();
