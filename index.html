@@ -65,7 +65,8 @@ const PLATFORMS = {
   GAMECUBE:{name:'GameCube / Wii',code:'GAMECUBE',color:'bg-purple-700'},
   N3DS:{name:'Nintendo 3DS',code:'3DS',color:'bg-rose-600'},
   WINDOWS:{name:'Windows PC',code:'WIN',color:'bg-cyan-600'},
-  GBA:{name:'Game Boy Advance',code:'GBA',color:'bg-amber-600'}
+  GBA:{name:'Game Boy Advance',code:'GBA',color:'bg-amber-600'},
+  XBOX:{name:'Xbox Clásico',code:'XBOX',color:'bg-green-700'}
 };
 const CATS = ['ALL','NATIVE APPS','EMULATORS','FAVORITES','RECENTLY PLAYED'];
 const games = [
@@ -231,10 +232,12 @@ const Launcher = (() => {
 const EMU = {
   PS2: { activity:'xyz.aethersx2.android.EmulationActivity', action:'android.intent.action.MAIN', extraKey:'bootPath' },
   PSP: { activity:'org.ppsspp.ppsspp.PpssppActivity', action:'android.intent.action.VIEW', data:true },
-  GAMECUBE: { activity:'org.dolphinemu.dolphinemu.ui.main.MainActivity', action:'android.intent.action.MAIN', extraKey:'AutoStartFile' }
+  GAMECUBE: { activity:'org.dolphinemu.dolphinemu.ui.main.MainActivity', action:'android.intent.action.MAIN', extraKey:'AutoStartFile' },
+  SWITCH: { force:true, package:'dev.eden.eden_emulator', hint:'eden', activity:'org.yuzu.yuzu_emu.activities.EmulationActivity', action:'android.intent.action.VIEW', saf:true },
+  XBOX: { force:true, package:'com.rfandango.hakux', hint:'hakux' }
 };
-const PLAT_EMU = { PS2:'xyz.aethersx2.android', PSP:'org.ppsspp.ppsspp', GAMECUBE:'org.dolphinemu.dolphinemu', SWITCH:'org.yuzu.yuzu_emu', N3DS:'org.citra.citra_emu', GBA:'com.retroarch' };
-const EXTS = { PS2:'.iso,.chd,.bin', PSP:'.cso,.iso,.pbp', GAMECUBE:'.rvz,.iso,.gcm', SWITCH:'.nsp,.xci', N3DS:'.3ds,.cia', GBA:'.gba' };
+const PLAT_EMU = { PS2:'xyz.aethersx2.android', PSP:'org.ppsspp.ppsspp', GAMECUBE:'org.dolphinemu.dolphinemu', SWITCH:'dev.eden.eden_emulator', N3DS:'org.citra.citra_emu', GBA:'com.retroarch', XBOX:'com.rfandango.hakux' };
+const EXTS = { PS2:'.iso,.chd,.bin', PSP:'.cso,.iso,.pbp', GAMECUBE:'.rvz,.iso,.gcm', SWITCH:'.nsp,.xci', N3DS:'.3ds,.cia', GBA:'.gba', XBOX:'.iso,.xiso' };
 let lastPath = '/storage/emulated/0/ROMS/PS2', lastPlat = 'PS2';
 
 async function launchGame(id){
@@ -242,7 +245,7 @@ async function launchGame(id){
   if (!Launcher) { toast('Esto solo funciona dentro de la app Android'); return; }
   const e = g.type === 'NATIVE' ? {} : (EMU[g.platform] || {});
   try {
-    const r = await Launcher.launch({ package: g.pkg, activity: e.activity, action: e.action, extraKey: e.extraKey, path: g.rom, data: e.data ? g.rom : undefined });
+    const r = await Launcher.launch({ package: e.force ? e.package : g.pkg, hint: e.hint, activity: e.activity, action: e.action, extraKey: e.extraKey, path: g.rom, data: e.data ? g.rom : undefined, saf: e.saf || false, tree: g.folder });
     toast(r.fallback && g.type !== 'NATIVE' ? 'Se abrió el emulador; abre el juego desde ahí' : '▶ Iniciando ' + g.title);
   } catch (err) { toast('⚠️ ' + (err.message || err)); }
 }
@@ -269,7 +272,7 @@ async function runScan(){
     let n = 0;
     r.files.forEach(f => {
       if (games.some(g => g.rom === f.path)) return;
-      games.unshift({ id: 's' + Date.now() + '_' + (n++), title: f.name.replace(/\.[^.]+$/, '').replace(/_+/g, ' '), type: 'EMULATOR', platform: pl, publisher: '—', year: '—', fav: false, played: false, g: ['#1e3a8a', '#111827'], desc: 'ROM detectada en ' + path, pkg: PLAT_EMU[pl], rom: f.path, emu: PLATFORMS[pl].name });
+      games.unshift({ id: 's' + Date.now() + '_' + (n++), title: f.name.replace(/\.[^.]+$/, '').replace(/_+/g, ' '), type: 'EMULATOR', platform: pl, publisher: '—', year: '—', fav: false, played: false, g: ['#1e3a8a', '#111827'], desc: 'ROM detectada en ' + path, folder: path, pkg: PLAT_EMU[pl], rom: f.path, emu: PLATFORMS[pl].name });
     });
     save(); idx = 0; render();
     out.textContent = n + ' juegos nuevos agregados (' + r.files.length + ' encontrados).';

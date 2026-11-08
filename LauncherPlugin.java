@@ -20,6 +20,32 @@ import java.util.Set;
 @CapacitorPlugin(name = "Launcher")
 public class LauncherPlugin extends Plugin {
 
+    private String safUri(String path, String tree) {
+        String base = "/storage/emulated/0/";
+        if (path == null || !path.startsWith(base)) return null;
+        String rel = path.substring(base.length());
+        String auth = "content://com.android.externalstorage.documents/";
+        if (tree != null && tree.startsWith(base) && path.startsWith(tree)) {
+            String t = tree.substring(base.length());
+            while (t.endsWith("/")) t = t.substring(0, t.length() - 1);
+            return auth + "tree/primary%3A" + Uri.encode(t) + "/document/primary%3A" + Uri.encode(rel);
+        }
+        return auth + "document/primary%3A" + Uri.encode(rel);
+    }
+
+    private String findByHint(String hint) {
+        if (hint == null) return null;
+        PackageManager pm = getContext().getPackageManager();
+        String h = hint.toLowerCase();
+        for (android.content.pm.ApplicationInfo a : pm.getInstalledApplications(0)) {
+            String label = String.valueOf(pm.getApplicationLabel(a)).toLowerCase();
+            if (a.packageName.toLowerCase().contains(h) || label.contains(h)) {
+                if (pm.getLaunchIntentForPackage(a.packageName) != null) return a.packageName;
+            }
+        }
+        return null;
+    }
+
     @PluginMethod
     public void launch(PluginCall call) {
         String pkg = call.getString("package");
@@ -29,25 +55,43 @@ public class LauncherPlugin extends Plugin {
         String data = call.getString("data");
         String extraKey = call.getString("extraKey");
         String path = call.getString("path");
+        String hint = call.getString("hint");
+        String tree = call.getString("tree");
+        boolean saf = Boolean.TRUE.equals(call.getBoolean("saf", false));
 
         JSObject ret = new JSObject();
+        PackageManager pm = getContext().getPackageManager();
         try {
+            if (pm.getLaunchIntentForPackage(pkg) == null) {
+                String alt = findByHint(hint);
+                if (alt != null) pkg = alt;
+            }
+            if (activity == null && data == null && extraKey == null && !saf) {
+                throw new Exception("usar-launch-normal");
+            }
             Intent i = new Intent(action);
             if (activity != null) i.setComponent(new ComponentName(pkg, activity));
             else i.setPackage(pkg);
-            if (data != null) i.setData(Uri.parse(data));
-            if (extraKey != null && path != null) i.putExtra(extraKey, path);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            if (activity == null && data == null && extraKey == null) {
-                throw new Exception("usar-launch-normal");
+            boolean content = false;
+            if (saf) {
+                String u = safUri(path, tree);
+                if (u != null) { i.setData(Uri.parse(u)); content = true; }
+            } else if (data != null) {
+                i.setData(Uri.parse(data));
             }
+            if (extraKey != null && path != null) i.putExtra(extraKey, path);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (!content) i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             getContext().startActivity(i);
             ret.put("fallback", false);
             call.resolve(ret);
         } catch (Exception e) {
             try {
-                PackageManager pm = getContext().getPackageManager();
                 Intent f = pm.getLaunchIntentForPackage(pkg);
+                if (f == null) {
+                    String alt = findByHint(hint);
+                    if (alt != null) f = pm.getLaunchIntentForPackage(alt);
+                }
                 if (f == null) { call.reject("No esta instalado: " + pkg); return; }
                 f.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 getContext().startActivity(f);
