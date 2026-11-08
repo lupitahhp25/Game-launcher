@@ -1,0 +1,6 @@
+{
+  "appId": "com.gamelauncher.app",
+  "appName": "Game Launcher",
+  "webDir": "www",
+  "server": { "androidScheme": "https" }
+}
