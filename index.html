@@ -13,12 +13,10 @@
   .bg-layer { transition: opacity 1s ease, transform 6s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   .fade { animation: fade .5s ease-out; }
-  body { background:#000a1e; font-family: "SST","Segoe UI",system-ui,-apple-system,Roboto,sans-serif; font-weight:300; }
+  body { background:#0d1218; font-family: "SST","Segoe UI",system-ui,-apple-system,Roboto,sans-serif; font-weight:300; }
   .gbtn { width:44px; height:44px; border-radius:9999px; display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,.14); backdrop-filter:blur(14px); border:1px solid rgba(255,255,255,.12); font-size:16px; transition:transform .2s, background .2s; }
   .gbtn:hover { background:rgba(255,255,255,.28); transform:scale(1.08); }
   #modal > div { background:rgba(18,26,48,.78) !important; backdrop-filter:blur(30px); border:1px solid rgba(255,255,255,.14) !important; border-radius:28px !important; }
-  .tile { width:min(21vh,15vw); height:min(21vh,15vw); }
-  .tile-sel { width:min(30vh,22vw); height:min(30vh,22vw); }
   .ttl { font-size:clamp(1.4rem,min(7.5vh,7vw),3.75rem); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
   .desc { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .gbtn { width:clamp(34px,9vh,46px); height:clamp(34px,9vh,46px); font-size:clamp(13px,3.6vh,17px); flex-shrink:0; }
@@ -47,34 +45,48 @@
   .wz-ico { height:min(32vh,14rem); width:auto; border-radius:22%; box-shadow:0 20px 60px rgba(0,0,0,.5); flex-shrink:0; }
   #wiz h1 { font-size:clamp(1.4rem,5.5vh,2.4rem); font-weight:300; line-height:1.15; }
   #wiz p { color:rgba(255,255,255,.65); font-size:clamp(.8rem,2.6vh,1rem); line-height:1.4; }
-  #row { scroll-snap-type:x mandatory; padding-inline:calc(50% - min(30vh,22vw)/2); position:relative; }
-  .tile { width:min(30vh,22vw); height:min(30vh,22vw); margin-inline:calc(min(30vh,22vw)*-.12); transform:scale(.72); transform-origin:center bottom; opacity:.7; scroll-snap-align:center; transition:transform .38s cubic-bezier(.34,1.45,.64,1), opacity .25s, box-shadow .3s; }
-  .tile.sel { transform:scale(1); opacity:1; z-index:2; box-shadow:0 0 0 3px #fff, 0 0 44px rgba(130,170,255,.6); }
   .tt { display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; }
   @keyframes swap { from{opacity:0;transform:translateX(18px)} to{opacity:1;transform:none} }
   @keyframes bgsw { from{opacity:.35} to{opacity:1} }
   .swap { animation:swap .35s ease-out; }
   .bgsw { animation:bgsw .5s ease-out; }
+  :root { --S:min(27vh,19vw); --A:8vw; }
+  .cat { font-size:clamp(.6rem,2.3vh,.85rem); font-weight:700; letter-spacing:.07em; text-transform:uppercase; padding:.3em .9em; border-radius:9999px; border:2px solid transparent; color:rgba(255,255,255,.92); white-space:nowrap; transition:border-color .2s; }
+  .cat.on { border-color:#2f6bff; }
+  .kbadge { font-size:.55rem; letter-spacing:.05em; padding:.1rem .45rem; border:1px solid rgba(255,255,255,.35); border-radius:.5rem; color:rgba(255,255,255,.6); }
+  .plat { font-size:clamp(.5rem,1.9vh,.7rem); letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.45); padding-bottom:2px; border-bottom:2px solid transparent; white-space:nowrap; }
+  .plat.on { color:#fff; border-color:#fff; }
+  .ico { width:clamp(24px,6vh,32px); height:clamp(24px,6vh,32px); color:rgba(255,255,255,.92); display:flex; align-items:center; justify-content:center; }
+  #row { display:flex; align-items:flex-end; gap:calc(var(--S)*.15); overflow-x:auto; scroll-snap-type:x mandatory; padding-left:calc(var(--A) + var(--S)*.085); padding-right:calc(100% - var(--A) - var(--S)); scroll-padding-left:var(--A); padding-top:1vh; position:relative; }
+  .tile { flex:0 0 auto; position:relative; width:var(--S); height:var(--S); margin-inline:calc(var(--S)*-.085); border-radius:4px; overflow:hidden; cursor:pointer; transform:scale(.83); transform-origin:center bottom; filter:brightness(.82); scroll-snap-align:start; transition:transform .38s cubic-bezier(.34,1.35,.64,1), filter .25s, box-shadow .3s; }
+  .tile.sel { transform:scale(1); filter:none; z-index:2; box-shadow:0 8px 30px rgba(0,0,0,.55); }
+  .tcap { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:10%; text-align:center; font-size:clamp(.6rem,2.1vh,.8rem); font-weight:600; line-height:1.15; }
+  .disc { position:absolute; right:7%; bottom:7%; width:12%; height:12%; min-width:12px; min-height:12px; border-radius:50%; background:rgba(0,0,0,.55); }
+  .disc::after { content:""; position:absolute; inset:28%; border-radius:50%; background:#fff; }
+  .lblp { font-size:clamp(.6rem,2.1vh,.8rem); letter-spacing:.15em; color:rgba(255,255,255,.55); margin-right:.8em; font-weight:600; }
+  .lblt { font-size:clamp(.6rem,2.1vh,.8rem); color:rgba(255,255,255,.75); }
+  .hint { font-size:clamp(.5rem,1.9vh,.7rem); letter-spacing:.1em; font-weight:700; color:rgba(255,255,255,.88); display:inline-flex; align-items:center; gap:.5em; }
+  .pillic { width:.55em; height:1.1em; border-radius:.3em; border:1.5px solid #fff; display:inline-block; }
 </style>
 </head>
 <body>
 <div id="app" class="relative w-full h-full overflow-hidden select-none">
   <div id="bg" class="absolute inset-0"></div>
-  <video id="vid" class="absolute inset-0 w-full h-full object-cover opacity-0" style="transition:opacity 1s;filter:brightness(.4)" muted loop playsinline autoplay></video>
-  <div class="absolute inset-0" style="background:radial-gradient(ellipse at 35% 45%, rgba(0,0,0,0) 0%, rgba(0,10,30,.55) 60%, rgba(0,6,20,.95) 100%)"></div>
-  <div class="absolute inset-0 bg-gradient-to-b from-[#000a1e]/70 via-transparent to-[#000a1e]/90"></div>
+  <video id="vid" class="absolute inset-0 w-full h-full object-cover opacity-0" style="object-position:70% center;transition:opacity 1s;filter:brightness(.55)" muted loop playsinline autoplay></video>
+  <div class="absolute inset-0" style="background:linear-gradient(90deg,#0d1218 0%,rgba(13,18,24,.93) 26%,rgba(13,18,24,.45) 52%,rgba(13,18,24,0) 78%)"></div>
+  <div class="absolute inset-0" style="background:linear-gradient(to top,rgba(8,11,15,.92) 0%,rgba(8,11,15,.55) 30%,transparent 52%),linear-gradient(to bottom,rgba(8,11,15,.6),transparent 22%)"></div>
 
-  <div class="relative z-10 flex flex-col h-full py-3" style="padding-left:max(3vw,env(safe-area-inset-left,0px));padding-right:max(3vw,env(safe-area-inset-right,0px))">
-    <header class="flex items-center justify-between gap-4">
-      <nav class="flex items-center min-w-0">
-        <button id="l1" class="hidden"></button>
-        <div id="cats" class="flex items-center gap-7 overflow-x-auto no-scrollbar pt-1"></div>
-        <button id="r1" class="hidden"></button>
-      </nav>
-      <div class="flex items-center gap-3 flex-shrink-0 relative">
-        <button id="srch" class="gbtn" title="Buscar">🔍</button>
-        <button id="menubtn" class="gbtn" title="Menú">☰</button>
-        <span id="clock" class="text-lg font-light"></span>
+  <div class="relative z-10 flex flex-col h-full" style="padding:0 max(2vw,env(safe-area-inset-right,0px)) 2vh max(2vw,env(safe-area-inset-left,0px))">
+    <header class="flex items-center justify-between" style="height:9vh;min-height:30px">
+      <div class="flex items-center gap-3 text-white/90" style="font-size:clamp(.7rem,2.6vh,.95rem)">
+        <span id="clock" class="font-medium"></span>
+        <span id="wifi" class="inline-flex"></span>
+        <span class="inline-flex items-center gap-1"><span id="batic" class="inline-flex"></span><span id="batt"></span></span>
+      </div>
+      <div id="gpTop" class="flex items-center gap-1 text-white" style="opacity:.3;font-size:clamp(.6rem,2.2vh,.8rem)"><svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="currentColor"><path d="M7 8h10a5 5 0 0 1 4.7 6.7l-.8 2.3a2.3 2.3 0 0 1-3.9.8L15.5 15h-7l-1.5 2.8a2.3 2.3 0 0 1-3.9-.8l-.8-2.3A5 5 0 0 1 7 8z"/></svg><b>1</b></div>
+      <div class="flex items-center gap-3 relative">
+        <button id="srch" class="ico" title="Buscar"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
+        <button id="menubtn" class="ico" title="Menú"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
         <button id="avatar" class="avbtn" title="Perfil"></button>
         <div id="qmenu" class="hidden absolute right-0 top-full mt-3 z-30 w-64 rounded-3xl p-2">
           <button id="scanbtn" class="qrow"><span class="w-6 text-center">📁</span>Escanear ROMs</button>
@@ -91,19 +103,27 @@
       </div>
     </header>
 
-    <main class="flex-1 flex flex-col justify-center min-h-0 overflow-hidden">
-      <div id="row" class="flex items-end gap-4 overflow-x-auto no-scrollbar px-1 py-3 scroll-smooth flex-shrink-0"></div>
-      <div id="hero" class="fade pl-1"></div>
-    </main>
+    <nav class="flex items-center gap-2" style="padding-left:6vw">
+      <button id="l1" class="kbadge">L1</button>
+      <div id="cats" class="flex items-center gap-1 overflow-x-auto no-scrollbar"></div>
+      <button id="r1" class="kbadge">R1</button>
+    </nav>
+    <div id="plats" class="flex items-center gap-4 overflow-x-auto no-scrollbar" style="padding-left:6vw;margin-top:1.4vh"></div>
 
-    <footer class="flex items-center justify-between gap-4">
-      <div id="plats" class="flex items-center gap-2 overflow-x-auto no-scrollbar"></div>
-      <div class="hidden md:flex items-center gap-5 text-[11px] text-white/50 flex-shrink-0">
-        <span>✕ Seleccionar</span><span>○ Atrás</span><span>L1 / R1 Categorías</span>
+    <div id="hero" class="flex-1 min-h-0 flex flex-col justify-center" style="padding-left:8vw"></div>
+
+    <section>
+      <div id="row" class="no-scrollbar scroll-smooth"></div>
+      <div class="flex items-center justify-between" style="margin-top:1.2vh">
+        <div id="lbl" class="truncate min-w-0" style="padding-left:8vw"></div>
+        <div class="flex items-center gap-5 flex-shrink-0">
+          <button id="optbtn" class="hint"><span class="pillic"></span>OPCIONES</button>
+          <button id="topbtn" class="hint"><span>△</span>MENÚ PRINCIPAL</button>
+        </div>
       </div>
-    </footer>
+    </section>
   </div>
-
+  <div id="opts" class="hidden fixed z-40 w-60 rounded-3xl p-2" style="right:3vw;bottom:9vh"></div>
   <div id="wiz" class="fixed inset-0 z-[70] hidden items-center justify-center p-6" style="background:radial-gradient(ellipse at 30% 35%,#16264d,#050a18 70%)"></div>
   <div id="intro" class="fixed inset-0 z-[60] overflow-hidden" style="background:#04070d;transition:opacity 1s ease">
     <div class="i-teal absolute inset-0"></div>
@@ -161,60 +181,43 @@ function render(soft, scrollTo){
   const gs = list(); if (idx >= gs.length) idx = 0;
   const cur = gs[idx];
   if (!soft) {
-  $('cats').innerHTML = CATS.map(c => `<button data-c="${c}" class="relative pb-2 text-base whitespace-nowrap transition ${c===cat?'text-white font-semibold':'text-white/45 hover:text-white/80'}">${CAT_LABEL[c]}${c===cat?'<span class="absolute left-1/2 bottom-0 w-1.5 h-1.5 -translate-x-1/2 rounded-full bg-white"></span>':''}</button>`).join('');
-  $('plats').innerHTML = `<button data-p="ALL" class="px-3 py-1 rounded-full text-[11px] whitespace-nowrap ${plat==='ALL'?'bg-white text-black font-semibold':'bg-white/10 text-white/70'}">Todos</button>` +
-    Object.entries(PLATFORMS).filter(([k]) => games.some(g => g.platform === k)).map(([k,p]) => `<button data-p="${k}" class="px-3 py-1 rounded-full text-[11px] whitespace-nowrap ${plat===k?'bg-white text-black font-semibold':'bg-white/10 text-white/70'}">${p.code}</button>`).join('');
+    $('cats').innerHTML = CATS.map(c => `<button data-c="${c}" class="cat ${c===cat?'on':''}">${CAT_LABEL[c]}</button>`).join('');
+    $('plats').innerHTML = [['ALL','Todos']].concat(Object.entries(PLATFORMS).filter(([k]) => games.some(g => g.platform === k)).map(([k,p]) => [k, p.code])).map(([k,t]) => `<button data-p="${k}" class="plat ${plat===k?'on':''}">${t}</button>`).join('');
   }
-  $('bg').style.background = cur ? `${cur.wall?`url('${cur.wall}') center/cover, `:''}${grad(cur.g)}` : '#000a1e';
-  $('bg').style.filter = 'brightness(.55) saturate(1.15)';
+  $('bg').style.background = cur ? `${cur.wall?`url('${cur.wall}') 72% center/cover, `:''}${grad(cur.g)}` : '#0d1218';
+  $('bg').style.filter = 'brightness(.85) saturate(1.1)';
   const v = $('vid');
   if (cur && cur.vid && v.dataset.s !== cur.vid) { v.dataset.s = cur.vid; v.src = cur.vid; v.play().catch(()=>{}); v.style.opacity = 1; v.onerror = () => v.style.opacity = 0; } else if (!cur || !cur.vid) { v.style.opacity = 0; v.dataset.s = ''; }
   if (!cur){
-    $('row').innerHTML = '';
+    $('row').innerHTML = ''; $('lbl').innerHTML = '';
     $('hero').innerHTML = games.length
       ? '<p class="text-white/60 text-lg">No hay juegos en esta categoría.</p>'
-      : '<p class="text-3xl md:text-4xl font-light mb-2">Tu biblioteca está vacía</p><p class="text-white/60 text-sm mb-5 max-w-md">Elige la carpeta donde guardas tus juegos y el launcher los agrega solo.</p><button id="emptyscan" class="playbtn rounded-full bg-white text-black font-semibold">📁 Escanear ROMs</button>';
+      : '<p class="text-3xl md:text-4xl font-light mb-2">Tu biblioteca está vacía</p><p class="text-white/60 text-sm mb-5 max-w-md">Elige la carpeta donde guardas tus juegos y el launcher los agrega solo.</p><div><button id="emptyscan" class="playbtn rounded-full bg-white text-black font-semibold">📁 Escanear ROMs</button></div>';
     const eb = $('emptyscan'); if (eb) eb.onclick = openScan;
     return;
   }
+  $('hero').innerHTML = '';
   const p = PLATFORMS[cur.platform] || PLATFORMS.ANDROID;
-  $('hero').innerHTML = `
-    <p class="text-[11px] tracking-[.25em] uppercase text-white/60">${p.name} · ${cur.type==='NATIVE'?'App nativa':'Emulador'}</p>
-    <h1 class="ttl font-light tracking-tight leading-tight mt-1 drop-shadow-xl">${clean(cur.title)}</h1>
-    <div class="flex items-center gap-3 mt-4">
-      <button id="play" class="playbtn rounded-full bg-white text-black font-semibold shadow-[0_0_35px_rgba(255,255,255,.35)] hover:scale-105 active:scale-95 transition">▶ Jugar</button>
-      <button id="fav" class="gbtn ${cur.fav?'!bg-yellow-400/30 !border-yellow-300/60':''}" title="Favorito">${cur.fav?'★':'☆'}</button>
-      <div class="relative">
-        <button id="more" class="gbtn" title="Más opciones">⋯</button>
-        <div id="opts" class="hidden absolute left-0 bottom-full mb-2 z-20 w-56 rounded-3xl p-2">
-          <button id="ai" class="qrow"><span class="w-6 text-center">✨</span>Optimizador IA</button>
-          <button id="scrape" class="qrow"><span class="w-6 text-center">🔄</span>Carátulas y datos</button>
-          <button id="del" class="qrow !text-red-300"><span class="w-6 text-center">🗑️</span>Quitar de la biblioteca</button>
-        </div>
-      </div>
-    </div>
-    <div class="mt-4 max-w-xl rounded-2xl bg-white/10 backdrop-blur-xl border border-white/10 p-3">
-      <p class="desc text-sm text-white/85 leading-snug">${cur.desc || ''}</p>
-      <p id="rom" class="text-[11px] text-white/45 mt-2 truncate font-mono">💾 ${cur.type==='NATIVE'?cur.pkg:cur.rom}</p>
-    </div>`;
-  const rowHtml = () => gs.map((g,i) => { const sel = i===idx; return `
-    <div data-i="${i}" class="tile relative flex-shrink-0 cursor-pointer rounded-[22px] overflow-hidden ${sel?'sel':''}" style="background:${g.img?`url('${g.img}') center/cover, `:''}${grad(g.g)}">
-      ${g.img?'':`<div class="absolute inset-0 flex items-center justify-center p-3 text-center text-xs font-semibold leading-tight"><span class="tt">${clean(g.title)}</span></div>`}
-      <span class="absolute left-2 bottom-2 px-1.5 py-0.5 rounded-md bg-black/55 backdrop-blur text-[9px] font-semibold">${(PLATFORMS[g.platform]||PLATFORMS.ANDROID).code}</span>
-      ${g.fav?'<span class="absolute right-2 top-1.5 text-yellow-300 text-sm">★</span>':''}
-    </div>`; }).join('');
+  $('lbl').innerHTML = `<span class="lblp">${p.code}</span><span class="lblt">${clean(cur.title)}</span>`;
+  const ic = t => `<span class="w-6 text-center">${t}</span>`;
+  $('opts').innerHTML = `<p class="px-4 pt-2 pb-1 text-[11px] text-white/50 truncate">${clean(cur.title)}</p>
+    <button id="play" class="qrow">${ic('▶')}Jugar</button>
+    <button id="fav" class="qrow">${ic(cur.fav?'★':'☆')}${cur.fav?'Quitar de favoritos':'Agregar a favoritos'}</button>
+    <button id="ai" class="qrow">${ic('✨')}Optimizador IA</button>
+    <button id="scrape" class="qrow">${ic('🔄')}Carátulas y datos</button>
+    <button id="del" class="qrow !text-red-300">${ic('🗑️')}Quitar de la biblioteca</button>`;
+  const rowHtml = () => gs.map((g,i) => `<div data-i="${i}" class="tile ${i===idx?'sel':''}" style="background:${g.img?`url('${g.img}') center/cover, `:''}${grad(g.g)}">${g.img?'':`<div class="tcap"><span class="tt">${clean(g.title)}</span></div>`}${g.type==='NATIVE'?'':'<span class="disc"></span>'}</div>`).join('');
   const row = $('row');
   if (!soft || row.children.length !== gs.length) { row.innerHTML = rowHtml(); soft = false; }
   else [...row.children].forEach((t, i) => t.classList.toggle('sel', i === idx));
-  if (soft) { for (const [el, cls] of [[$('hero'), 'swap'], [$('bg'), 'bgsw']]) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); } }
+  if (soft) { for (const [el, cls] of [[$('lbl'), 'swap'], [$('bg'), 'bgsw']]) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); } }
   const tgt = row.children[idx];
   if (tgt) {
-    const left = tgt.offsetLeft + tgt.offsetWidth / 2 - row.clientWidth / 2;
+    const left = tgt.offsetLeft - innerWidth * .08;
     if (!soft) row.scrollTo({ left, behavior:'instant' });
     else if (scrollTo !== false) { autoScroll = true; row.scrollTo({ left, behavior:'smooth' }); clearTimeout(autoT); autoT = setTimeout(() => autoScroll = false, 500); }
   }
   $('play').onclick = () => openModal(cur,'launch');
-  $('more').onclick = () => $('opts').classList.toggle('hidden');
   $('ai').onclick = () => openModal(cur,'ai');
   $('scrape').onclick = openSS;
   $('fav').onclick = () => { cur.fav = !cur.fav; save(); render(); };
@@ -242,12 +245,12 @@ function openModal(g, kind){ sfx('ok');
 function closeModal(){ sfx('back'); const m=$('modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
 
 document.addEventListener('click', e => {
-  if (!e.target.closest('#more')) { const o = $('opts'); if (o) o.classList.add('hidden'); }
-  if (!e.target.closest('#menubtn') && !e.target.closest('#qmenu') || e.target.closest('.qrow')) $('qmenu').classList.add('hidden');
+  if (!e.target.closest('#optbtn')) { const o = $('opts'); if (o) o.classList.add('hidden'); }
+  if ((!e.target.closest('#menubtn') && !e.target.closest('#qmenu') && !e.target.closest('#topbtn')) || e.target.closest('.qrow')) $('qmenu').classList.add('hidden');
   const c = e.target.closest('[data-c]'), p = e.target.closest('[data-p]'), i = e.target.closest('[data-i]');
   if (c){ sfx('cat'); cat=c.dataset.c; idx=0; render(); }
   else if (p){ sfx('cat'); plat=p.dataset.p; idx=0; render(); }
-  else if (i){ setIdx(+i.dataset.i); }
+  else if (i){ const k = +i.dataset.i; if (k === idx) { const g = list()[idx]; if (g) openModal(g, 'launch'); } else setIdx(k); }
 });
 $('l1').onclick = () => shiftCat(-1);
 $('r1').onclick = () => shiftCat(1);
@@ -283,6 +286,8 @@ async function goFS(){
 }
 $('srch').onclick = openSearch;
 $('menubtn').onclick = () => $('qmenu').classList.toggle('hidden');
+$('topbtn').onclick = () => $('qmenu').classList.toggle('hidden');
+$('optbtn').onclick = () => $('opts').classList.toggle('hidden');
 $('profbtn').onclick = openProfile;
 $('avatar').onclick = openProfile;
 $('scanbtn').onclick = openScan;
@@ -294,7 +299,7 @@ $('mute').onclick = () => { const v = $('vid'); v.muted = !v.muted; $('mute').in
 let gpLast = 0;
 function pad(){
   const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find(g => g && g.connected);
-  $('gpad').textContent = gp ? '🎮 Mando listo' : '🎮 Conectar mando';
+  $('gpad').textContent = gp ? '🎮 Mando listo' : '🎮 Conectar mando'; $('gpTop').style.opacity = gp ? 1 : .3;
   if (introOn) { if (!wizOn && gp && gp.buttons[9] && gp.buttons[9].pressed) enterHome(); }
   else if (gp && Date.now() - gpLast > 200) {
     const b = i => gp.buttons[i] && gp.buttons[i].pressed, x = gp.axes[0] || 0, n = list().length || 1;
@@ -306,6 +311,8 @@ function pad(){
     else if (b(4)) shiftCat(-1);
     else if (b(5)) shiftCat(1);
     else if (b(0)) { const g = list()[idx]; if (g) openModal(g,'launch'); }
+    else if (b(3)) { $('qmenu').classList.toggle('hidden'); }
+    else if (b(9)) { $('opts').classList.toggle('hidden'); }
     else if (b(2)) { const g = list()[idx]; if (g) openSS(); }
     else act = false;
     if (act) gpLast = Date.now();
@@ -717,11 +724,30 @@ let rowTick = false;
 $('row').addEventListener('scroll', () => {
   if (autoScroll || rowTick) return; rowTick = true;
   requestAnimationFrame(() => {
-    rowTick = false; const row = $('row'), c = row.scrollLeft + row.clientWidth / 2; let best = 0, bd = 1e9;
-    [...row.children].forEach((t, i) => { const d = Math.abs(t.offsetLeft + t.offsetWidth / 2 - c); if (d < bd) { bd = d; best = i; } });
+    rowTick = false; const row = $('row'), x = row.scrollLeft + innerWidth * .08; let best = 0, bd = 1e9;
+    [...row.children].forEach((t, i) => { const d = Math.abs(t.offsetLeft - x); if (d < bd) { bd = d; best = i; } });
     if (best !== idx) { idx = best; sfx('move'); render(true, false); }
   });
 }, { passive:true });
+
+
+// ===== Barra de estado: hora, wifi y batería =====
+function wifiSvg(l, off){ const o = i => l >= i ? 1 : .25; return `<svg viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="opacity:${off?.5:1}"><path d="M2 9a14 14 0 0 1 20 0" opacity="${o(3)}"/><path d="M5 12.5a9.5 9.5 0 0 1 14 0" opacity="${o(2)}"/><path d="M8.5 16a5 5 0 0 1 7 0" opacity="${o(1)}"/><circle cx="12" cy="19.5" r="1.2" fill="currentColor" stroke="none"/>${off?'<path d="M3 3l18 18" stroke-width="2.4"/>':''}</svg>`; }
+const cellSvg = '<svg viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M4 20v-4M9 20v-7M14 20v-10M19 20V5"/></svg>';
+function battSvg(p, ch){ const c = ch ? '#4ade80' : (p <= 15 ? '#f87171' : '#fff'); return `<svg viewBox="0 0 28 14" width="1.9em" height="1em"><rect x="1" y="1" width="23" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".9"/><rect x="25" y="4.5" width="2" height="5" rx="1" fill="currentColor" opacity=".9"/><rect x="3" y="3" width="${Math.max(1, 19 * p / 100)}" height="8" rx="1.5" fill="${c}"/></svg>`; }
+async function updStatus(){
+  let st = null;
+  try { if (Launcher) st = await Launcher.status(); } catch(e) {}
+  if (!st) {
+    st = { battery:-1, charging:false, net: navigator.onLine ? 'wifi' : 'none', wifiLevel:3 };
+    try { const b = await navigator.getBattery(); st.battery = Math.round(b.level * 100); st.charging = b.charging; } catch(e) {}
+  }
+  $('wifi').innerHTML = st.net === 'wifi' ? wifiSvg(st.wifiLevel) : st.net === 'none' ? wifiSvg(0, true) : cellSvg;
+  $('batic').innerHTML = st.battery >= 0 ? battSvg(st.battery, st.charging) : '';
+  $('batt').textContent = st.battery >= 0 ? st.battery + '%' : '';
+}
+updStatus(); setInterval(updStatus, 20000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) updStatus(); });
 
 render();
 </script>

@@ -180,6 +180,43 @@ public class LauncherPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void status(PluginCall call) {
+        JSObject r = new JSObject();
+        try {
+            Intent b = getContext().registerReceiver(null, new android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            int level = b.getIntExtra("level", -1), scale = b.getIntExtra("scale", 100), st = b.getIntExtra("status", -1);
+            r.put("battery", scale > 0 ? Math.round(level * 100f / scale) : -1);
+            r.put("charging", st == 2 || st == 5);
+        } catch (Exception e) {
+            r.put("battery", -1);
+            r.put("charging", false);
+        }
+        String net = "none";
+        int lvl = 0;
+        try {
+            android.net.ConnectivityManager cm = (android.net.ConnectivityManager) getContext().getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+            android.net.Network n = cm.getActiveNetwork();
+            if (n != null) {
+                android.net.NetworkCapabilities c = cm.getNetworkCapabilities(n);
+                if (c != null) {
+                    if (c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) net = "wifi";
+                    else if (c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)) net = "cell";
+                    else net = "other";
+                }
+            }
+            if (net.equals("wifi")) {
+                android.net.wifi.WifiManager wm = (android.net.wifi.WifiManager) getContext().getApplicationContext().getSystemService(android.content.Context.WIFI_SERVICE);
+                lvl = android.net.wifi.WifiManager.calculateSignalLevel(wm.getConnectionInfo().getRssi(), 5);
+            }
+        } catch (Exception e) {
+            if (net.equals("wifi")) lvl = 3;
+        }
+        r.put("net", net);
+        r.put("wifiLevel", lvl);
+        call.resolve(r);
+    }
+
+    @PluginMethod
     public void hasAllFiles(PluginCall call) {
         boolean ok = Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager();
         JSObject r = new JSObject();
