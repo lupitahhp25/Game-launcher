@@ -85,6 +85,7 @@
       </div>
       <div id="gpTop" class="flex items-center gap-1 text-white" style="opacity:.3;font-size:clamp(.6rem,2.2vh,.8rem)"><svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="currentColor"><path d="M7 8h10a5 5 0 0 1 4.7 6.7l-.8 2.3a2.3 2.3 0 0 1-3.9.8L15.5 15h-7l-1.5 2.8a2.3 2.3 0 0 1-3.9-.8l-.8-2.3A5 5 0 0 1 7 8z"/></svg><b>1</b></div>
       <div class="flex items-center gap-3 relative">
+        <button id="sstop" class="ico" title="Carátulas y datos (scrapear)"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg></button>
         <button id="srch" class="ico" title="Buscar"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
         <button id="menubtn" class="ico" title="Menú"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
         <button id="avatar" class="avbtn" title="Perfil"></button>
@@ -177,6 +178,11 @@ function toast(m){ const t=$('toast'); t.textContent=m; t.classList.remove('hidd
 function shiftCat(d){ sfx('cat'); cat = CATS[(CATS.indexOf(cat)+d+CATS.length)%CATS.length]; idx=0; render(); }
 
 const CAT_LABEL = {'ALL':'Todos','NATIVE APPS':'Apps','EMULATORS':'Emuladores','FAVORITES':'Favoritos','RECENTLY PLAYED':'Recientes'};
+function cycleBg(g){
+  const av = ['shot','cover','video'].filter(m => m === 'shot' ? g.wall : m === 'cover' ? g.img : g.vid);
+  if (av.length < 2) { toast('Este juego solo tiene un fondo. Usa “Carátulas y datos” para descargar más.'); return; }
+  const i = av.indexOf(bgMode(g)); g.bgMode = av[(i + 1) % av.length]; save(); render(true, false); toast('🎞️ Fondo: ' + MODE_LABEL[g.bgMode]);
+}
 function render(soft, scrollTo){
   const gs = list(); if (idx >= gs.length) idx = 0;
   const cur = gs[idx];
@@ -184,10 +190,13 @@ function render(soft, scrollTo){
     $('cats').innerHTML = CATS.map(c => `<button data-c="${c}" class="cat ${c===cat?'on':''}">${CAT_LABEL[c]}</button>`).join('');
     $('plats').innerHTML = [['ALL','Todos']].concat(Object.entries(PLATFORMS).filter(([k]) => games.some(g => g.platform === k)).map(([k,p]) => [k, p.code])).map(([k,t]) => `<button data-p="${k}" class="plat ${plat===k?'on':''}">${t}</button>`).join('');
   }
-  $('bg').style.background = cur ? `${cur.wall?`url('${cur.wall}') 72% center/cover, `:''}${grad(cur.g)}` : '#0d1218';
-  $('bg').style.filter = 'brightness(.85) saturate(1.1)';
+  const mode = cur ? bgMode(cur) : 'shot';
+  const art = !cur ? '' : (mode === 'cover' && cur.img ? cur.img : (cur.wall || ''));
+  $('bg').style.background = cur ? `${art?`url('${art}') 72% center/cover, `:''}${grad(cur.g)}` : '#0d1218';
+  $('bg').style.filter = (cur && mode === 'cover' && cur.img) ? 'brightness(.8) blur(3px)' : 'brightness(.85) saturate(1.1)';
+  const vsrc = (cur && mode === 'video' && cur.vid) ? cur.vid : '';
   const v = $('vid');
-  if (cur && cur.vid && v.dataset.s !== cur.vid) { v.dataset.s = cur.vid; v.src = cur.vid; v.play().catch(()=>{}); v.style.opacity = 1; v.onerror = () => v.style.opacity = 0; } else if (!cur || !cur.vid) { v.style.opacity = 0; v.dataset.s = ''; }
+  if (vsrc && v.dataset.s !== vsrc) { v.dataset.s = vsrc; v.src = vsrc; v.play().catch(()=>{}); v.style.opacity = 1; v.onerror = () => v.style.opacity = 0; } else if (!vsrc) { v.style.opacity = 0; v.dataset.s = ''; try { v.pause(); } catch(e) {} }
   if (!cur){
     $('row').innerHTML = ''; $('lbl').innerHTML = '';
     $('hero').innerHTML = games.length
@@ -205,6 +214,7 @@ function render(soft, scrollTo){
     <button id="fav" class="qrow">${ic(cur.fav?'★':'☆')}${cur.fav?'Quitar de favoritos':'Agregar a favoritos'}</button>
     <button id="ai" class="qrow">${ic('✨')}Optimizador IA</button>
     <button id="scrape" class="qrow">${ic('🔄')}Carátulas y datos</button>
+    <button id="bgm" class="qrow">${ic('🎞️')}Fondo: ${MODE_LABEL[mode]}</button>
     <button id="del" class="qrow !text-red-300">${ic('🗑️')}Quitar de la biblioteca</button>`;
   const rowHtml = () => gs.map((g,i) => `<div data-i="${i}" class="tile ${i===idx?'sel':''}" style="background:${g.img?`url('${g.img}') center/cover, `:''}${grad(g.g)}">${g.img?'':`<div class="tcap"><span class="tt">${clean(g.title)}</span></div>`}${g.type==='NATIVE'?'':'<span class="disc"></span>'}</div>`).join('');
   const row = $('row');
@@ -220,6 +230,7 @@ function render(soft, scrollTo){
   $('play').onclick = () => openModal(cur,'launch');
   $('ai').onclick = () => openModal(cur,'ai');
   $('scrape').onclick = openSS;
+  $('bgm').onclick = () => cycleBg(cur);
   $('fav').onclick = () => { cur.fav = !cur.fav; save(); render(); };
   $('del').onclick = () => { if (confirm('¿Quitar "' + cur.title + '" de la biblioteca?')) { games.splice(games.indexOf(cur), 1); idx = 0; save(); render(); } };
 }
@@ -291,6 +302,7 @@ $('optbtn').onclick = () => $('opts').classList.toggle('hidden');
 $('profbtn').onclick = openProfile;
 $('avatar').onclick = openProfile;
 $('scanbtn').onclick = openScan;
+$('sstop').onclick = openSS;
 $('ssbtn').onclick = openSS;
 $('fs').onclick = goFS;
 $('mute').onclick = () => { const v = $('vid'); v.muted = !v.muted; $('mute').innerHTML = '<span class="w-6 text-center">' + (v.muted ? '🔇' : '🔊') + '</span>Sonido: ' + (v.muted ? 'apagado' : 'activado'); };
@@ -394,7 +406,10 @@ const SSYS = { PS2:58, PSP:61, SWITCH:225, GAMECUBE:13, N3DS:17, GBA:12, XBOX:32
 const LIBR = { PS2:'Sony - PlayStation 2', PSP:'Sony - PlayStation Portable', SWITCH:'Nintendo - Switch', GAMECUBE:'Nintendo - GameCube', N3DS:'Nintendo - Nintendo 3DS', GBA:'Nintendo - Game Boy Advance', XBOX:'Microsoft - Xbox', PS1:'Sony - PlayStation' };
 let cred = { user:'', pass:'', devid:'', devpass:'' };
 try { Object.assign(cred, JSON.parse(localStorage.getItem('gl_ss') || '{}')); } catch(e) {}
-let sopt = { covers:true, fondo:true, video:false, sinopsis:true };
+let sopt = { covers:true, fondo:true, video:false, sinopsis:true, bg:(localStorage.getItem('gl_bg') || 'shot') };
+let missVid = 0;
+const MODE_LABEL = { shot:'Captura', cover:'Portada', video:'Video' };
+const bgMode = g => g.bgMode || (g.vid ? 'video' : 'shot');
 let scraping = false;
 const hasSS = () => cred.user && cred.pass && cred.devid && cred.devpass;
 const probe = url => new Promise(res => { const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = url; });
@@ -412,13 +427,14 @@ async function ssLookup(g){
 }
 async function scrapeOne(g){
   let jeu = null, err = null, got = false;
+  const bgm = sopt.bg || 'shot', needShot = sopt.fondo || bgm !== 'cover', needVid = sopt.video || bgm === 'video';
   if (hasSS() && SSYS[g.platform]) { try { jeu = await ssLookup(g); } catch(e) { err = e.message; } }
   const has = { c:false, f:false };
   if (jeu) {
     const m = jeu.medias || [];
     if (sopt.covers) { const u = pickMedia(m,'box-2D'); if (u) { g.img = u; has.c = true; got = true; } }
-    if (sopt.fondo) { const u = pickMedia(m,'ss') || pickMedia(m,'fanart'); if (u) { g.wall = u; has.f = true; got = true; } }
-    if (sopt.video) { const u = pickMedia(m,'video-normalized') || pickMedia(m,'video'); if (u) { g.vid = u; got = true; } }
+    if (needShot) { const u = pickMedia(m,'ss') || pickMedia(m,'fanart'); if (u) { g.wall = u; has.f = true; got = true; } }
+    if (needVid) { const u = pickMedia(m,'video-normalized') || pickMedia(m,'video'); if (u) { g.vid = u; got = true; } }
     if (sopt.sinopsis) {
       const sy = jeu.synopsis || [], t = (sy.find(x => x.langue === 'es') || sy.find(x => x.langue === 'en') || {}).text;
       if (t) { g.desc = t; got = true; }
@@ -426,12 +442,13 @@ async function scrapeOne(g){
     }
   }
   const lib = LIBR[g.platform];
-  if (lib && ((sopt.covers && !has.c) || (sopt.fondo && !has.f))) {
+  if (lib && ((sopt.covers && !has.c) || (needShot && !has.f))) {
     const name = encodeURIComponent(clean((g.rom || g.title).split('/').pop()).replace(/[&*\/:`<>?\\|]/g, '_'));
     const base = 'https://thumbnails.libretro.com/' + encodeURIComponent(lib) + '/';
     if (sopt.covers && !has.c) { const u = base + 'Named_Boxarts/' + name + '.png'; if (await probe(u)) { g.img = u; got = true; } }
-    if (sopt.fondo && !has.f) { const u = base + 'Named_Snaps/' + name + '.png'; if (await probe(u)) { g.wall = u; got = true; } }
+    if (needShot && !has.f) { const u = base + 'Named_Snaps/' + name + '.png'; if (await probe(u)) { g.wall = u; got = true; } }
   }
+  g.bgMode = bgm; if (bgm === 'video' && !g.vid) missVid++;
   g.scraped = got;
   return { got, err };
 }
@@ -440,13 +457,14 @@ function readSS(){
   cred = { user:v('ssu'), pass:v('ssp'), devid:v('ssd'), devpass:v('ssdp') };
   try { localStorage.setItem('gl_ss', JSON.stringify(cred)); } catch(e) {}
   const c = id => $(id) && $(id).checked;
-  sopt = { covers:c('ck_c'), fondo:c('ck_f'), video:c('ck_v'), sinopsis:c('ck_s') };
+  sopt = { covers:c('ck_c'), fondo:c('ck_f'), video:c('ck_v'), sinopsis:c('ck_s'), bg:($('bgsel') ? $('bgsel').dataset.v : (sopt.bg || 'shot')) };
+  try { localStorage.setItem('gl_bg', sopt.bg); } catch(e) {}
 }
 async function runScrape(items){
   if (scraping) return; readSS();
   const out = { set textContent(t){ say(t); } }; items = items.filter(g => g.type !== 'NATIVE');
   if (!items.length) { out.textContent = 'No hay juegos de emulador para scrapear.'; return; }
-  scraping = true; let ok = 0, lastErr = null;
+  scraping = true; let ok = 0, lastErr = null; missVid = 0;
   for (let i = 0; i < items.length; i++) {
     out.textContent = '(' + (i+1) + '/' + items.length + ') ' + clean(items[i].title) + '…';
     const r = await scrapeOne(items[i]);
@@ -455,7 +473,7 @@ async function runScrape(items){
     if (hasSS()) await new Promise(r => setTimeout(r, 1300));
   }
   scraping = false;
-  out.textContent = ok + ' de ' + items.length + ' juegos actualizados.' + (lastErr ? ' ScreenScraper dijo: ' + lastErr : '');
+  out.textContent = ok + ' de ' + items.length + ' juegos actualizados.' + (missVid ? ' ' + missVid + ' sin video (se usó la captura).' : '') + (lastErr ? ' ScreenScraper dijo: ' + lastErr : '');
 }
 function openSS(){
   const m = $('modal'); m.classList.remove('hidden'); m.classList.add('flex'); m.style.alignItems = '';
@@ -469,12 +487,16 @@ function openSS(){
       ${inp('ssd','Dev ID',cred.devid)}${inp('ssdp','Dev Password',cred.devpass,'password')}
     </div>
     <div class="grid grid-cols-2 gap-2 mb-3">${ck('ck_c','Carátulas',sopt.covers)}${ck('ck_f','Fondo (captura)',sopt.fondo)}${ck('ck_s','Sinopsis',sopt.sinopsis)}${ck('ck_v','Video (pesado)',sopt.video)}</div>
+    <p class="text-[11px] text-white/60 mb-1">Qué se ve de fondo en cada juego:</p>
+    <div id="bgsel" class="flex flex-wrap gap-2 mb-1" data-v="${sopt.bg || 'shot'}">${[['shot','🖼️ Captura'],['cover','📦 Portada'],['video','🎬 Video']].map(([v,t]) => `<button data-bgv="${v}" class="px-3 py-1.5 rounded-full text-xs ${(sopt.bg || 'shot')===v ? 'bg-white text-black font-semibold' : 'bg-white/10'}">${t}</button>`).join('')}</div>
+    <p class="text-[10px] text-white/45 mb-3">El video solo se descarga con una cuenta de ScreenScraper. Sin video, se usa la captura.</p>
     <p id="ssr" class="text-xs text-white/80 mb-3 min-h-[1rem]">Listo.</p>
     <div class="flex flex-wrap justify-end gap-2">
       <button onclick="readSS();closeModal()" class="px-4 py-2 bg-white/10 rounded-full text-xs">Cerrar</button>
       <button id="ssgo" class="px-4 py-2 bg-white/20 rounded-full text-xs font-semibold">Este juego</button>
       <button id="ssall" class="px-5 py-2 bg-white text-black rounded-full text-xs font-semibold">Toda la biblioteca</button>
     </div></div>`;
+  $('bgsel').onclick = e => { const b = e.target.closest('[data-bgv]'); if (!b) return; $('bgsel').dataset.v = b.dataset.bgv; $('bgsel').querySelectorAll('button').forEach(x => { x.className = 'px-3 py-1.5 rounded-full text-xs ' + (x === b ? 'bg-white text-black font-semibold' : 'bg-white/10'); }); };
   $('ssgo').onclick = () => { const g = list()[idx]; if (g) runScrape([g]); };
   $('ssall').onclick = () => runScrape(games.slice());
 }
