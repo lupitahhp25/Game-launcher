@@ -82,6 +82,31 @@
   .plb { font-size:clamp(.8rem,3.2vh,1.25rem); font-weight:700; }
   .psub { font-size:clamp(.6rem,2.1vh,.85rem); color:rgba(255,255,255,.62); font-weight:500; }
   .pch { font-size:clamp(1.1rem,4vh,1.6rem); color:#fff; flex-shrink:0; }
+  #padfx { position:fixed; left:50%; top:3vh; transform:translateX(-50%); z-index:97; pointer-events:none; }
+  .pfx { display:flex; align-items:center; gap:1.4vh; padding:1.2vh 2.4vh 1.2vh 1.2vh; border-radius:9999px; background:rgba(14,18,26,.84); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.18); box-shadow:0 10px 40px rgba(0,0,0,.5); animation:pfxin 3.8s cubic-bezier(.34,1.4,.64,1) both; color:#fff; white-space:nowrap; }
+  .pfx.off { animation-duration:2.4s; filter:grayscale(.75); }
+  @keyframes pfxin { 0%{transform:translateY(-170%) scale(.85);opacity:0} 10%{transform:none;opacity:1} 86%{transform:none;opacity:1} 100%{transform:translateY(-70%) scale(.95);opacity:0} }
+  .pfx-ic { position:relative; width:5.6vh; height:5.6vh; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--c); flex-shrink:0; }
+  .pfx-ic::before { content:""; position:absolute; inset:0; border-radius:50%; border:2px solid var(--g); animation:pfxring 1.3s .35s ease-out 2; }
+  @keyframes pfxring { 0%{transform:scale(1);opacity:.9} 100%{transform:scale(2.4);opacity:0} }
+  .pfx-sp, .pfx-bd { display:none; position:absolute; border-radius:50%; }
+  .pfx.xb .pfx-sp { display:block; inset:0; background:conic-gradient(from 0deg,#0b5a0b,#8be88b,#0b5a0b); animation:pfxspin 1s linear 3; }
+  .pfx.xb .pfx-bd { display:block; inset:.5vh; background:#0f3d0f; }
+  .pfx.xb .pfx-ic { background:none; }
+  .pfx-ic svg { position:relative; z-index:1; }
+  @keyframes pfxspin { to{transform:rotate(360deg)} }
+  .pfx.nin .pfx-ic { animation:pfxbounce .5s .3s ease 3; }
+  @keyframes pfxbounce { 50%{transform:translateY(-35%)} }
+  .pfx-tx { display:flex; flex-direction:column; line-height:1.15; }
+  .pfx-tx b { font-size:clamp(.8rem,3vh,1.1rem); }
+  .pfx-tx span { font-size:clamp(.6rem,2.1vh,.8rem); color:rgba(255,255,255,.65); }
+  .pfx-sym { display:flex; gap:.8vh; margin-left:1vh; }
+  .pfx-sym i { font-style:normal; font-weight:800; font-size:clamp(.7rem,2.6vh,1rem); width:3.6vh; height:3.6vh; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid var(--k); color:var(--k); opacity:0; animation:pfxpop .4s cubic-bezier(.34,1.8,.64,1) var(--d) both; }
+  @keyframes pfxpop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+  .pfx.ps { --c:linear-gradient(135deg,#2f6bff,#1a2f8f); --g:#5b8cff; box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 40px rgba(70,120,255,.35); }
+  .pfx.xb { --g:#5fd35f; box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 40px rgba(60,200,60,.35); }
+  .pfx.nin { --c:linear-gradient(90deg,#e60012 50%,#00a1e9 50%); --g:#ff4d5a; }
+  .pfx.gen { --c:linear-gradient(135deg,#6b7280,#374151); --g:#cbd5e1; }
 </style>
 </head>
 <body>
@@ -166,6 +191,7 @@
       <p id="i-name" class="text-white/85 mt-3">Jugador 1</p>
     </div>
   </div>
+  <div id="padfx"></div>
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[95] hidden bg-white/15 backdrop-blur-xl text-xs font-medium px-5 py-2 rounded-full border border-white/20"></div>
   <div id="modal" class="fixed inset-0 z-[90] hidden bg-black/70 backdrop-blur-md items-center justify-center p-4"></div>
 </div>
@@ -189,7 +215,7 @@ const U = (id,w)=>`https://images.unsplash.com/photo-${id}?q=80&w=${w}&auto=form
 const V = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/';
 try { const sv = JSON.parse(localStorage.getItem('gl_games') || 'null'); const keep = Array.isArray(sv) ? sv.filter(x => typeof x.id === 'string') : []; keep.forEach(x => games.push(x)); if (Array.isArray(sv) && keep.length !== sv.length) save(); } catch(e) {}
 function save(){ try { localStorage.setItem('gl_games', JSON.stringify(games)); } catch(e) {} }
-let cat = 'ALL', plat = 'ALL', idx = 0, q = '', autoScroll = false, autoT = 0, lastTick = 0, lastSt = null;
+let cat = 'ALL', plat = 'ALL', idx = 0, q = '', autoScroll = false, autoT = 0, lastTick = 0, lastSt = null, lastPadKey = '', lastPad = null, padT = 0;
 const $ = id => document.getElementById(id);
 const list = () => games.filter(g =>
   !(cat==='NATIVE APPS' && g.type!=='NATIVE') && !(cat==='EMULATORS' && g.type!=='EMULATOR') &&
@@ -336,6 +362,7 @@ let gpLast = 0;
 function pad(){
   const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find(g => g && g.connected);
   $('gpad').textContent = gp ? '🎮 Mando listo' : '🎮 Conectar mando'; $('gpTop').style.opacity = gp ? 1 : .3;
+  { const key = gp ? gp.id + '#' + gp.index : ''; if (key !== lastPadKey) { if (gp) onPadConnect(gp); else if (lastPadKey) onPadDisconnect(); lastPadKey = key; } }
   if (introOn) { if (!wizOn && gp && gp.buttons[9] && gp.buttons[9].pressed) enterHome(); }
   else if (gp && Date.now() - gpLast > 200) {
     const b = i => gp.buttons[i] && gp.buttons[i].pressed, x = gp.axes[0] || 0, n = list().length || 1;
@@ -859,6 +886,7 @@ function openSoundMenu(){
     { i:'🎵', t:'Estilo de sonido', s:PACKS[pack].name, go:true, keep:true, f:openPackMenu },
     { i:uiSound ? '🔔' : '🔕', t:'Sonidos del menú', s:uiSound ? 'Activados' : 'Apagados', keep:true, f:() => $('uibtn').click() },
     { i:'🔊', t:'Sonido del video de fondo', s:$('vid').muted ? 'Apagado' : 'Activado', keep:true, f:() => $('mute').click() },
+    { i:'🎮', t:'Animaciones de mando', s:'Probar PlayStation, Xbox y más', go:true, keep:true, f:openPadTest },
     { i:'⛶', t:'Pantalla completa', s:'Con bloqueo horizontal', f:goFS }
   ]);
 }
@@ -896,6 +924,55 @@ $('menubtn').onclick = openMainMenu; $('topbtn').onclick = openMainMenu; $('optb
 $('ps1').onclick = () => { sfx('ok'); openSoundMenu(); };
 $('ps2').onclick = () => toast(!lastSt ? 'Sin datos de red' : lastSt.net === 'wifi' ? '📶 Conectado por wifi' : lastSt.net === 'cell' ? '📶 Datos móviles' : '⚠️ Sin conexión');
 $('ps3').onclick = () => { const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find(x => x && x.connected); toast(gp ? '🎮 ' + gp.id.split('(')[0].trim() : 'Sin mando conectado'); };
+
+
+// ===== Animaciones al conectar mandos =====
+const CTRL_SVG = '<svg viewBox="0 0 24 24" width="62%" height="62%" fill="#fff"><path d="M7 8h10a5 5 0 0 1 4.7 6.7l-.8 2.3a2.3 2.3 0 0 1-3.9.8L15.5 15h-7l-1.5 2.8a2.3 2.3 0 0 1-3.9-.8l-.8-2.3A5 5 0 0 1 7 8z"/></svg>';
+function padBrand(id){
+  const t = (id || '').toLowerCase(), v = (t.match(/vendor:\s*([0-9a-f]{4})/) || t.match(/^([0-9a-f]{4})-/) || [])[1] || '';
+  if (v === '054c' || /playstation|dualsense|dualshock|sony/.test(t)) return 'ps';
+  if (v === '045e' || /xbox|x-box|xinput/.test(t)) return 'xb';
+  if (v === '057e' || /nintendo|switch|joy-con/.test(t)) return 'nin';
+  return 'gen';
+}
+function padInfo(gp){
+  const id = gp.id || '', brand = padBrand(id), pid = ((id.toLowerCase().match(/product:\s*([0-9a-f]{4})/) || [])[1]) || '';
+  const name = brand === 'ps' ? ({ '0ce6':'DualSense', '0df2':'DualSense Edge', '09cc':'DualShock 4', '05c4':'DualShock 4' }[pid] || 'Mando PlayStation')
+    : brand === 'xb' ? 'Mando Xbox' : brand === 'nin' ? 'Mando Nintendo' : (id.split('(')[0].trim() || 'Mando');
+  return { brand, name };
+}
+function padSound(brand, off){
+  if (!uiSound || pack === 'none') return; pv = 1;
+  try {
+    if (off) { tone(660, 0, .18, .06, 330); tone(440, .12, .25, .05, 220); return; }
+    if (brand === 'ps') { tone(587, 0, .25, .07); tone(880, .12, .3, .06); tone(1174, .24, .5, .05); [.55, .7, .85, 1].forEach((t, i) => tone(1500 + i * 180, t, .08, .025)); }
+    else if (brand === 'xb') { tone(150, 0, .5, .035, 600, 'sawtooth'); tone(392, .3, .5, .06); tone(587, .42, .5, .055); tone(784, .54, .8, .05); }
+    else if (brand === 'nin') { tone(988, 0, .08, .05, null, 'square'); tone(1319, .09, .22, .05, null, 'square'); }
+    else { tone(660, 0, .12, .06); tone(990, .08, .25, .05); }
+  } catch(e) {}
+}
+function padFx(brand, name, n, off){
+  const sets = { ps:[['△','#54d6a1'],['○','#ff6b7a'],['✕','#6aa8ff'],['□','#ff9bd2']], xb:[['A','#7ddc6b'],['B','#ff5a5a'],['X','#5aa8ff'],['Y','#ffd23f']], nin:[['A','#fff'],['B','#fff'],['X','#fff'],['Y','#fff']], gen:[] };
+  const box = $('padfx'); clearTimeout(padT);
+  box.innerHTML = `<div class="pfx ${brand} ${off ? 'off' : ''}"><div class="pfx-ic"><span class="pfx-sp"></span><span class="pfx-bd"></span>${CTRL_SVG}</div><div class="pfx-tx"><b>${name}</b><span>${off ? 'Mando desconectado' : 'Mando ' + n + ' conectado'}</span></div>${off ? '' : `<div class="pfx-sym">${sets[brand].map(([t, c], i) => `<i style="--k:${c};--d:${(.55 + i * .15).toFixed(2)}s">${t}</i>`).join('')}</div>`}</div>`;
+  padT = setTimeout(() => { box.innerHTML = ''; }, off ? 2500 : 3900);
+  padSound(brand, off);
+}
+function onPadConnect(gp){
+  const info = padInfo(gp); lastPad = info; padFx(info.brand, info.name, gp.index + 1, false);
+  try { gp.vibrationActuator && gp.vibrationActuator.playEffect('dual-rumble', { startDelay:0, duration:220, weakMagnitude:.6, strongMagnitude:.4 }); } catch(e) {}
+}
+function onPadDisconnect(){ const i = lastPad || { brand:'gen', name:'Mando' }; padFx(i.brand, i.name, 1, true); }
+function openPadTest(){
+  const go = (b, n) => () => setTimeout(() => padFx(b, n, 1, false), 200);
+  openPanel('Animaciones de mando', () => [
+    { i:'🔵', t:'PlayStation', s:'DualSense / DualShock', f:go('ps', 'DualSense') },
+    { i:'🟢', t:'Xbox', s:'Xbox Wireless Controller', f:go('xb', 'Mando Xbox') },
+    { i:'🔴', t:'Nintendo', s:'Switch Pro / Joy-Con', f:go('nin', 'Mando Nintendo') },
+    { i:'⚪', t:'Otro mando', s:'8BitDo, GameSir y similares', f:go('gen', 'Mando') },
+    { i:'⏏️', t:'Desconexión', s:'Animación al quitar el mando', f:() => setTimeout(() => padFx('ps', 'DualSense', 1, true), 200) }
+  ]);
+}
 
 render();
 </script>
