@@ -1,12 +1,16 @@
 package com.gamelauncher.app;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.provider.Settings;
+import androidx.activity.result.ActivityResult;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -100,6 +104,35 @@ public class LauncherPlugin extends Plugin {
             } catch (Exception e2) {
                 call.reject("No se pudo abrir: " + e2.getMessage());
             }
+        }
+    }
+
+    @PluginMethod
+    public void pickFolder(PluginCall call) {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        startActivityForResult(call, i, "pickFolderResult");
+    }
+
+    @ActivityCallback
+    private void pickFolderResult(PluginCall call, ActivityResult result) {
+        if (call == null) return;
+        if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null || result.getData().getData() == null) {
+            call.reject("Cancelado");
+            return;
+        }
+        try {
+            Uri uri = result.getData().getData();
+            String docId = DocumentsContract.getTreeDocumentId(uri);
+            int c = docId.indexOf(':');
+            String vol = c >= 0 ? docId.substring(0, c) : docId;
+            String rel = c >= 0 ? docId.substring(c + 1) : "";
+            String p = vol.equals("primary") ? "/storage/emulated/0" : "/storage/" + vol;
+            if (!rel.isEmpty()) p += "/" + rel;
+            JSObject r = new JSObject();
+            r.put("path", p);
+            call.resolve(r);
+        } catch (Exception e) {
+            call.reject("No se pudo leer la carpeta: " + e.getMessage());
         }
     }
 
