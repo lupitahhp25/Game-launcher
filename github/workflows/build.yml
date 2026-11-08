@@ -1,0 +1,59 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Preparar la pagina web
+        run: |
+          mkdir -p www
+          cp index.html www/index.html
+          if curl -fsSL https://cdn.tailwindcss.com/3.4.17 -o www/tailwind.js; then
+            sed -i 's|https://cdn.tailwindcss.com/3.4.17|tailwind.js|' www/index.html
+          fi
+
+      - name: Instalar Capacitor y crear proyecto Android
+        run: |
+          npm install
+          npx cap add android
+
+      - name: Agregar codigo nativo y permisos
+        run: |
+          PKG=android/app/src/main/java/com/gamelauncher/app
+          mkdir -p $PKG
+          cp LauncherPlugin.java MainActivity.java $PKG/
+          M=android/app/src/main/AndroidManifest.xml
+          sed -i 's|<application|<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>\n    <application|' $M
+          sed -i 's|<activity|<activity android:screenOrientation="sensorLandscape"|' $M
+
+      - name: Compilar APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Publicar APK en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Game Launcher (build ${{ github.run_number }})
+          files: android/app/build/outputs/apk/debug/app-debug.apk
