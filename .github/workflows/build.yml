@@ -45,6 +45,21 @@ jobs:
           sed -i 's|<application|<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>\n    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>\n    <application|' $M
           sed -i 's|<activity|<activity android:screenOrientation="sensorLandscape"|' $M
 
+      - name: Poner el icono de la app
+        run: |
+          python3 -m pip install pillow
+          python3 - <<'PY'
+          from PIL import Image
+          import shutil
+          res = 'android/app/src/main/res'
+          shutil.rmtree(res + '/mipmap-anydpi-v26', ignore_errors=True)
+          src = Image.open('icon.png').convert('RGBA')
+          for d, n in {'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}.items():
+              im = src.resize((n, n), Image.LANCZOS)
+              for f in ('ic_launcher.png', 'ic_launcher_round.png', 'ic_launcher_foreground.png'):
+                  im.save(f'{res}/mipmap-{d}/{f}')
+          PY
+
       - name: Compilar APK
         run: |
           cd android
