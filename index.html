@@ -67,6 +67,21 @@
   .lblt { font-size:clamp(.6rem,2.1vh,.8rem); color:rgba(255,255,255,.75); }
   .hint { font-size:clamp(.5rem,1.9vh,.7rem); letter-spacing:.1em; font-weight:700; color:rgba(255,255,255,.88); display:inline-flex; align-items:center; gap:.5em; }
   .pillic { width:.55em; height:1.1em; border-radius:.3em; border:1.5px solid #fff; display:inline-block; }
+  #qmenu, #opts { display:none !important; }
+  #pmenu { z-index:80; }
+  .pside { display:flex; flex-direction:column; gap:1.4vh; padding:1.4vh; border-radius:3vh; background:linear-gradient(180deg,rgba(120,122,126,.7),rgba(70,72,76,.78)); border:1px solid rgba(255,255,255,.2); backdrop-filter:blur(24px); flex-shrink:0; }
+  .pbtn { width:clamp(2.6rem,13vh,4.4rem); height:clamp(2.6rem,13vh,4.4rem); border-radius:50%; background:rgba(26,28,32,.92); color:#fff; font-size:clamp(1.2rem,6vh,2rem); display:flex; align-items:center; justify-content:center; }
+  .ppanel { width:min(78vw,62rem); max-height:88vh; display:flex; flex-direction:column; padding:2vh; border-radius:3.4vh; background:linear-gradient(180deg,rgba(116,118,122,.8),rgba(64,66,70,.86)); border:1px solid rgba(255,255,255,.2); backdrop-filter:blur(30px); box-shadow:0 30px 80px rgba(0,0,0,.5); }
+  .ptitle { font-size:clamp(.6rem,2.1vh,.8rem); letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.65); padding:0 1.4vh 1vh; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #plist { overflow-y:auto; display:flex; flex-direction:column; gap:1vh; }
+  .prow { display:flex; align-items:center; gap:1.6vh; padding:1.3vh 2vh; border-radius:3vh; background:rgba(24,26,30,.62); color:#f4f4f5; cursor:pointer; border:3px solid transparent; transition:border-color .15s, background .15s; flex-shrink:0; }
+  .prow.on { border-color:#fff; background:rgba(30,32,36,.84); }
+  .prow.dng .plb { color:#fca5a5; }
+  .pic { width:4vh; text-align:center; font-size:clamp(1rem,3.6vh,1.5rem); flex-shrink:0; }
+  .ptx { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .plb { font-size:clamp(.8rem,3.2vh,1.25rem); font-weight:700; }
+  .psub { font-size:clamp(.6rem,2.1vh,.85rem); color:rgba(255,255,255,.62); font-weight:500; }
+  .pch { font-size:clamp(1.1rem,4vh,1.6rem); color:#fff; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -124,6 +139,14 @@
       </div>
     </section>
   </div>
+  <div id="pmenu" class="hidden fixed inset-0 z-[80] items-center justify-center" style="gap:2vw;padding:3vh 3vw;background:rgba(6,9,14,.6);backdrop-filter:blur(12px)">
+    <div id="pside" class="pside">
+      <button id="ps1" class="pbtn" title="Sonidos y pantalla">⚙</button>
+      <button id="ps2" class="pbtn" title="Red"></button>
+      <button id="ps3" class="pbtn" title="Mando">ᛒ</button>
+    </div>
+    <div id="ppanel" class="ppanel"><p id="pttl" class="ptitle"></p><div id="plist" class="no-scrollbar"></div></div>
+  </div>
   <div id="opts" class="hidden fixed z-40 w-60 rounded-3xl p-2" style="right:3vw;bottom:9vh"></div>
   <div id="wiz" class="fixed inset-0 z-[70] hidden items-center justify-center p-6" style="background:radial-gradient(ellipse at 30% 35%,#16264d,#050a18 70%)"></div>
   <div id="intro" class="fixed inset-0 z-[60] overflow-hidden" style="background:#04070d;transition:opacity 1s ease">
@@ -166,7 +189,7 @@ const U = (id,w)=>`https://images.unsplash.com/photo-${id}?q=80&w=${w}&auto=form
 const V = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/';
 try { const sv = JSON.parse(localStorage.getItem('gl_games') || 'null'); const keep = Array.isArray(sv) ? sv.filter(x => typeof x.id === 'string') : []; keep.forEach(x => games.push(x)); if (Array.isArray(sv) && keep.length !== sv.length) save(); } catch(e) {}
 function save(){ try { localStorage.setItem('gl_games', JSON.stringify(games)); } catch(e) {} }
-let cat = 'ALL', plat = 'ALL', idx = 0, q = '', autoScroll = false, autoT = 0, lastTick = 0;
+let cat = 'ALL', plat = 'ALL', idx = 0, q = '', autoScroll = false, autoT = 0, lastTick = 0, lastSt = null;
 const $ = id => document.getElementById(id);
 const list = () => games.filter(g =>
   !(cat==='NATIVE APPS' && g.type!=='NATIVE') && !(cat==='EMULATORS' && g.type!=='EMULATOR') &&
@@ -269,6 +292,7 @@ $('modal').onclick = e => { if (e.target.id==='modal') closeModal(); };
 document.addEventListener('keydown', e => {
   if (wizOn) return;
   if (introOn) { if (e.key === 'Enter' || e.key === ' ') enterHome(); return; }
+  if (panelOn()) { if (e.key === 'ArrowDown') pmMove(1); else if (e.key === 'ArrowUp') pmMove(-1); else if (e.key === 'Enter') pmGo(); else if (e.key === 'Escape' || e.key === 'Backspace') pmBack(); return; }
   if (!$('modal').classList.contains('hidden')) { if (e.key==='Escape') closeModal(); return; }
   const n = list().length || 1;
   if (e.key==='ArrowRight'){ setIdx(idx+1); }
@@ -317,14 +341,15 @@ function pad(){
     const b = i => gp.buttons[i] && gp.buttons[i].pressed, x = gp.axes[0] || 0, n = list().length || 1;
     const open = !$('modal').classList.contains('hidden');
     let act = true;
-    if (open) { if (b(1)) closeModal(); else act = false; }
+    if (panelOn()) { const y = gp.axes[1] || 0; if (b(13) || y > .5) pmMove(1); else if (b(12) || y < -.5) pmMove(-1); else if (b(0)) pmGo(); else if (b(1)) pmBack(); else act = false; }
+    else if (open) { if (b(1)) closeModal(); else act = false; }
     else if (b(15) || x > .4) { setIdx(idx+1); }
     else if (b(14) || x < -.4) { setIdx(idx-1); }
     else if (b(4)) shiftCat(-1);
     else if (b(5)) shiftCat(1);
     else if (b(0)) { const g = list()[idx]; if (g) openModal(g,'launch'); }
-    else if (b(3)) { $('qmenu').classList.toggle('hidden'); }
-    else if (b(9)) { $('opts').classList.toggle('hidden'); }
+    else if (b(3)) { openMainMenu(); }
+    else if (b(9)) { openGameMenu(); }
     else if (b(2)) { const g = list()[idx]; if (g) openSS(); }
     else act = false;
     if (act) gpLast = Date.now();
@@ -717,9 +742,10 @@ if (Launcher && !localStorage.getItem('gl_setup')) { if (games.length) { try { l
 // ===== Sonidos de menú (estilo consola) y selección con swipe =====
 let AC = null, uiSound = localStorage.getItem('gl_ui') !== '0';
 function ac(){ if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
-function tone(f, t0, dur, vol, f2){
+let pv = 1, pack = localStorage.getItem('gl_pack') || 'consola';
+function tone(f, t0, dur, vol, f2, type){
   const A = ac(); if (!A) return; const t = A.currentTime + t0, o = A.createOscillator(), g = A.createGain();
-  o.type = 'sine'; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f * pv, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2 * pv, t + dur);
   g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   o.connect(g); g.connect(A.destination); o.start(t); o.stop(t + dur + .02);
 }
@@ -732,7 +758,8 @@ const SND = {
 function sfx(n){
   if (!uiSound) return;
   if (n === 'move') { const t = performance.now(); if (t - lastTick < 45) return; lastTick = t; }
-  try { SND[n](); } catch(e) {}
+  pv = n === 'move' ? 0.94 + Math.random() * 0.14 : 1;
+  try { (PACKS[pack] || PACKS.consola)[n](); } catch(e) {}
 }
 function paintUi(){ $('uibtn').innerHTML = '<span class="w-6 text-center">' + (uiSound ? '🔔' : '🔕') + '</span>Sonidos del menú: ' + (uiSound ? 'activados' : 'apagados'); }
 $('uibtn').onclick = () => { uiSound = !uiSound; try { localStorage.setItem('gl_ui', uiSound ? '1' : '0'); } catch(e) {} paintUi(); sfx('ok'); };
@@ -764,12 +791,111 @@ async function updStatus(){
     st = { battery:-1, charging:false, net: navigator.onLine ? 'wifi' : 'none', wifiLevel:3 };
     try { const b = await navigator.getBattery(); st.battery = Math.round(b.level * 100); st.charging = b.charging; } catch(e) {}
   }
+  lastSt = st;
   $('wifi').innerHTML = st.net === 'wifi' ? wifiSvg(st.wifiLevel) : st.net === 'none' ? wifiSvg(0, true) : cellSvg;
   $('batic').innerHTML = st.battery >= 0 ? battSvg(st.battery, st.charging) : '';
   $('batt').textContent = st.battery >= 0 ? st.battery + '%' : '';
 }
 updStatus(); setInterval(updStatus, 20000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) updStatus(); });
+
+
+// ===== Paquetes de sonido =====
+function noise(dur, vol){
+  const A = ac(); if (!A) return; const n = Math.floor(A.sampleRate * dur), buf = A.createBuffer(1, n, A.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const src = A.createBufferSource(), g = A.createGain(), f = A.createBiquadFilter();
+  f.type = 'highpass'; f.frequency.value = 2500 * pv; g.gain.value = vol; src.buffer = buf; src.connect(f); f.connect(g); g.connect(A.destination); src.start();
+}
+const PACKS = {
+  consola: Object.assign({ name:'Consola', desc:'Tic suave y limpio, estilo PlayStation' }, SND),
+  suave: { name:'Suave', desc:'Tonos redondos y relajados',
+    move(){ tone(660,0,.14,.05,null,'triangle'); }, cat(){ tone(523,0,.12,.045,null,'triangle'); tone(784,.07,.16,.04,null,'triangle'); },
+    ok(){ tone(523,0,.15,.06,null,'triangle'); tone(659,.08,.15,.05,null,'triangle'); tone(784,.16,.3,.05,null,'triangle'); }, back(){ tone(440,0,.14,.045,330,'triangle'); } },
+  retro: { name:'Retro 8 bits', desc:'Bips de videojuego clásico',
+    move(){ tone(880,0,.05,.03,null,'square'); }, cat(){ tone(660,0,.05,.028,null,'square'); tone(990,.06,.07,.028,null,'square'); },
+    ok(){ tone(523,0,.07,.03,null,'square'); tone(784,.08,.07,.03,null,'square'); tone(1046,.16,.16,.03,null,'square'); }, back(){ tone(440,0,.06,.028,null,'square'); tone(330,.06,.1,.028,null,'square'); } },
+  cristal: { name:'Cristal', desc:'Campanitas brillantes',
+    move(){ tone(2093,0,.18,.035); tone(3136,0,.12,.015); }, cat(){ tone(1568,0,.2,.035); tone(2349,.06,.25,.03); },
+    ok(){ tone(1568,0,.3,.04); tone(2093,.07,.35,.035); tone(3136,.14,.5,.03); }, back(){ tone(1175,0,.2,.035,880); } },
+  gota: { name:'Gota de agua', desc:'Gotas que caen',
+    move(){ tone(900,0,.12,.06,350); }, cat(){ tone(1100,0,.12,.05,450); tone(1400,.08,.12,.04,600); },
+    ok(){ tone(800,0,.14,.07,300); tone(1200,.1,.2,.05,500); }, back(){ tone(500,0,.14,.05,250); } },
+  arcade: { name:'Arcade', desc:'Barridos electrónicos',
+    move(){ tone(520,0,.07,.03,860,'sawtooth'); }, cat(){ tone(440,0,.09,.03,880,'sawtooth'); },
+    ok(){ tone(392,0,.1,.035,784,'sawtooth'); tone(784,.1,.2,.03,1568,'sawtooth'); }, back(){ tone(700,0,.1,.03,300,'sawtooth'); } },
+  clic: { name:'Clic', desc:'Clics secos, muy discretos',
+    move(){ noise(.025,.35); }, cat(){ noise(.03,.4); tone(1800,.02,.05,.02); }, ok(){ noise(.04,.5); tone(1200,.03,.08,.03); }, back(){ noise(.03,.3); } },
+  none: { name:'Sin sonidos', desc:'Silencio total', move(){}, cat(){}, ok(){}, back(){} }
+};
+
+// ===== Menú tipo iiSU: panel grande con filas =====
+let pstack = [];
+const panelOn = () => !$('pmenu').classList.contains('hidden');
+const pmTop = () => pstack[pstack.length - 1];
+function openPanel(title, build, opt){ pstack.push({ title, build, opt: opt || {}, f: 0, items: [] }); const m = $('pmenu'); m.classList.remove('hidden'); m.classList.add('flex'); pmRender(); }
+function pmRender(){
+  const t = pmTop(); if (!t) return; t.items = t.build(); if (t.f >= t.items.length) t.f = 0;
+  $('pttl').textContent = t.title; $('pside').style.display = t.opt.side ? 'flex' : 'none';
+  $('plist').innerHTML = t.items.map((it, i) => `<div class="prow ${i === t.f ? 'on' : ''} ${it.danger ? 'dng' : ''}" data-pi="${i}"><span class="pic">${it.i}</span><span class="ptx"><span class="plb">${it.t}</span>${it.s ? `<span class="psub">${it.s}</span>` : ''}</span>${it.go ? '<span class="pch">›</span>' : ''}</div>`).join('');
+  const on = $('plist').children[t.f]; if (on) on.scrollIntoView({ block:'nearest' });
+}
+function pmMove(d){ const t = pmTop(); if (!t || !t.items.length) return; t.f = (t.f + d + t.items.length) % t.items.length; sfx('move'); pmRender(); }
+function pmGo(i){
+  const t = pmTop(); if (!t) return; if (i != null) t.f = i; const it = t.items[t.f]; if (!it) return;
+  sfx('ok'); if (!it.keep) closePanel(); if (it.f) it.f(); if (it.keep && panelOn()) pmRender();
+}
+function pmBack(){ pstack.pop(); sfx('back'); if (pstack.length) pmRender(); else closePanel(); }
+function closePanel(){ pstack = []; const m = $('pmenu'); m.classList.add('hidden'); m.classList.remove('flex'); }
+$('plist').addEventListener('click', e => { const r = e.target.closest('[data-pi]'); if (r) pmGo(+r.dataset.pi); });
+$('pmenu').addEventListener('click', e => { if (e.target.id === 'pmenu') { closePanel(); sfx('back'); } });
+
+function openPackMenu(){
+  openPanel('Estilo de sonido', () => Object.entries(PACKS).map(([k, p]) => ({ i: k === pack ? '✅' : '▫️', t: p.name, s: p.desc, keep: true,
+    f: () => { pack = k; try { localStorage.setItem('gl_pack', k); } catch(e) {} if (k !== 'none' && !uiSound) { uiSound = true; try { localStorage.setItem('gl_ui', '1'); } catch(e) {} paintUi(); } sfx('move'); setTimeout(() => sfx('ok'), 260); } })));
+}
+function openSoundMenu(){
+  openPanel('Sonidos y pantalla', () => [
+    { i:'🎵', t:'Estilo de sonido', s:PACKS[pack].name, go:true, keep:true, f:openPackMenu },
+    { i:uiSound ? '🔔' : '🔕', t:'Sonidos del menú', s:uiSound ? 'Activados' : 'Apagados', keep:true, f:() => $('uibtn').click() },
+    { i:'🔊', t:'Sonido del video de fondo', s:$('vid').muted ? 'Apagado' : 'Activado', keep:true, f:() => $('mute').click() },
+    { i:'⛶', t:'Pantalla completa', s:'Con bloqueo horizontal', f:goFS }
+  ]);
+}
+function openMainMenu(){
+  if (wizOn || introOn) return;
+  pstack = [];
+  $('ps2').innerHTML = wifiSvg(lastSt ? (lastSt.net === 'wifi' ? lastSt.wifiLevel : 0) : 3, lastSt && lastSt.net === 'none');
+  openPanel('Menú principal', () => [
+    { i:'📁', t:'Escanear ROMs', s:'Elige una carpeta de juegos', go:true, f:() => $('scanbtn').click() },
+    { i:'🖼️', t:'Carátulas y datos', s:'Descarga portadas, fondos y videos', go:true, f:() => $('ssbtn').click() },
+    { i:'📱', t:'Agregar juegos de Android', s:'Apps y juegos instalados', go:true, f:() => $('appsbtn').click() },
+    { i:'🔄', t:'Re-escanear mi carpeta', s:wizRoot || 'Aún no elegiste carpeta', f:() => $('rescanbtn').click() },
+    { i:'🔍', t:'Buscar en la biblioteca', f:() => $('srch').click() },
+    { i:'👤', t:'Perfil y foto', s:profile.name, go:true, f:() => $('profbtn').click() },
+    { i:'🔊', t:'Sonidos y pantalla', s:'Estilo de sonido, volumen y más', go:true, keep:true, f:openSoundMenu },
+    { i:'⚙️', t:'Repetir configuración', s:'Permisos y carpeta de juegos', f:() => $('setupbtn').click() }
+  ], { side:true });
+  sfx('ok');
+}
+function openGameMenu(){
+  if (wizOn || introOn) return;
+  const g = list()[idx]; if (!g) { toast('No hay ningún juego seleccionado'); return; }
+  pstack = [];
+  openPanel(clean(g.title), () => [
+    { i:'▶', t:'Jugar', s:'Abrir con ' + (g.emu || 'su emulador'), f:() => $('play').click() },
+    { i:g.fav ? '★' : '☆', t:g.fav ? 'Quitar de favoritos' : 'Agregar a favoritos', keep:true, f:() => $('fav').click() },
+    { i:'✨', t:'Optimizador IA', s:'Ajustes recomendados para este juego', go:true, f:() => $('ai').click() },
+    { i:'🖼️', t:'Carátulas y datos', s:'Scrapear este juego', go:true, f:() => $('scrape').click() },
+    { i:'🎞️', t:'Fondo', s:MODE_LABEL[bgMode(g)], keep:true, f:() => $('bgm').click() },
+    { i:'🗑️', t:'Quitar de la biblioteca', danger:true, f:() => $('del').click() }
+  ]);
+  sfx('ok');
+}
+$('menubtn').onclick = openMainMenu; $('topbtn').onclick = openMainMenu; $('optbtn').onclick = openGameMenu;
+$('ps1').onclick = () => { sfx('ok'); openSoundMenu(); };
+$('ps2').onclick = () => toast(!lastSt ? 'Sin datos de red' : lastSt.net === 'wifi' ? '📶 Conectado por wifi' : lastSt.net === 'cell' ? '📶 Datos móviles' : '⚠️ Sin conexión');
+$('ps3').onclick = () => { const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find(x => x && x.connected); toast(gp ? '🎮 ' + gp.id.split('(')[0].trim() : 'Sin mando conectado'); };
 
 render();
 </script>
