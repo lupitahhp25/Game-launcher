@@ -24,6 +24,21 @@
   .gbtn { width:clamp(34px,9vh,46px); height:clamp(34px,9vh,46px); font-size:clamp(13px,3.6vh,17px); flex-shrink:0; }
   .playbtn { padding:clamp(.45rem,1.8vh,.8rem) clamp(1.6rem,6vh,2.6rem); font-size:clamp(.85rem,2.6vh,1rem); white-space:nowrap; }
   @media (max-height:520px) { .ttl, .desc { -webkit-line-clamp:1; } #rom { display:none; } }
+  .i-teal { background:radial-gradient(circle at 30% 50%,rgba(14,70,100,.95),rgba(4,12,24,.9) 55%,transparent 75%); animation:iteal 3s ease forwards; }
+  @keyframes iteal { 0%{opacity:0} 25%{opacity:1} 100%{opacity:0} }
+  .i-spot { top:-5%; left:0; width:75%; height:110%; background:linear-gradient(110deg,rgba(255,236,205,.30),rgba(255,236,205,.07) 45%,transparent 75%); clip-path:polygon(8% 0,50% 0,88% 100%,0 100%); filter:blur(26px); opacity:0; animation:ispot 2.5s 1.2s ease forwards; }
+  @keyframes ispot { to{opacity:1} }
+  .i-fade { opacity:0; animation:ifade 1.2s 2.4s ease forwards; }
+  @keyframes ifade { to{opacity:1} }
+  .i-ring { position:relative; width:clamp(3.2rem,12vh,4.8rem); height:clamp(3.2rem,12vh,4.8rem); border-radius:9999px; border:2px solid rgba(255,255,255,.65); display:flex; align-items:center; justify-content:center; font-size:.6rem; font-weight:600; letter-spacing:.12em; opacity:0; animation:ifade 1.2s 2.8s ease forwards; }
+  .i-ring::after { content:""; position:absolute; inset:-2px; border-radius:9999px; border:2px solid rgba(255,255,255,.5); animation:iring 2s 3s ease-out infinite; }
+  @keyframes iring { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.7);opacity:0} }
+  .i-avatar { width:clamp(4.5rem,18vh,7rem); height:clamp(4.5rem,18vh,7rem); margin-top:3vh; border-radius:9999px; background:radial-gradient(circle at 35% 30%,#7fb2ff,#2a46c8 60%,#0e1a55); box-shadow:0 0 0 3px rgba(255,255,255,.85),0 0 40px rgba(110,160,255,.55); }
+  @keyframes rise { from{opacity:0;transform:translateY(26px)} to{opacity:1;transform:none} }
+  #app.enter header { animation:rise .8s both; }
+  #app.enter #row { animation:rise .8s .15s both; }
+  #app.enter #hero { animation:rise .8s .3s both; }
+  #app.enter footer { animation:rise .8s .45s both; }
 </style>
 </head>
 <body>
@@ -65,6 +80,23 @@
     </footer>
   </div>
 
+  <div id="intro" class="fixed inset-0 z-[60] overflow-hidden" style="background:#04070d;transition:opacity 1s ease">
+    <div class="i-teal absolute inset-0"></div>
+    <div class="i-spot absolute"></div>
+    <div class="absolute inset-x-0 bottom-0 h-1/3" style="background:linear-gradient(to top,rgba(150,160,180,.22),transparent)"></div>
+    <canvas id="i-cv" class="absolute inset-0 w-full h-full"></canvas>
+    <div id="i-wait" class="absolute inset-0 flex flex-col items-center justify-center text-center" style="transition:opacity .5s">
+      <p class="i-fade text-white/70 font-light tracking-wide" style="font-size:clamp(.8rem,2.6vh,1.1rem);margin-bottom:5vh">Presiona START en tu mando</p>
+      <div class="i-ring"><span>START</span></div>
+      <p class="i-fade text-white/35 text-xs mt-6">o toca la pantalla</p>
+    </div>
+    <div id="i-welcome" class="absolute inset-0 flex flex-col items-center justify-center text-center" style="opacity:0;transform:translateY(10px);transition:all .8s ease">
+      <h2 class="font-light" style="font-size:clamp(1.3rem,5vh,2.2rem)">Bienvenido de nuevo</h2>
+      <p class="text-white/50 text-sm mt-1">¿Quién usa este mando?</p>
+      <div class="i-avatar"></div>
+      <p class="text-white/85 mt-3">Jugador 1</p>
+    </div>
+  </div>
   <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 hidden bg-white/15 backdrop-blur-xl text-xs font-medium px-5 py-2 rounded-full border border-white/20"></div>
   <div id="modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-md items-center justify-center p-4"></div>
 </div>
@@ -181,6 +213,7 @@ $('l1').onclick = () => shiftCat(-1);
 $('r1').onclick = () => shiftCat(1);
 $('modal').onclick = e => { if (e.target.id==='modal') closeModal(); };
 document.addEventListener('keydown', e => {
+  if (introOn) { if (e.key === 'Enter' || e.key === ' ') enterHome(); return; }
   if (!$('modal').classList.contains('hidden')) { if (e.key==='Escape') closeModal(); return; }
   const n = list().length || 1;
   if (e.key==='ArrowRight'){ idx=(idx+1)%n; render(); }
@@ -218,7 +251,8 @@ let gpLast = 0;
 function pad(){
   const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find(g => g && g.connected);
   $('gpad').textContent = gp ? '🎮 Mando listo' : '🎮 Conectar mando';
-  if (gp && Date.now() - gpLast > 200) {
+  if (introOn) { if (gp && gp.buttons[9] && gp.buttons[9].pressed) enterHome(); }
+  else if (gp && Date.now() - gpLast > 200) {
     const b = i => gp.buttons[i] && gp.buttons[i].pressed, x = gp.axes[0] || 0, n = list().length || 1;
     const open = !$('modal').classList.contains('hidden');
     let act = true;
@@ -392,6 +426,47 @@ function openSS(){
   $('ssgo').onclick = () => { const g = list()[idx]; if (g) runScrape([g]); };
   $('ssall').onclick = () => runScrape(games.slice());
 }
+
+
+// ===== Intro estilo consola: presiona START =====
+let introOn = true, introStage = 0, introRaf = 0, particles = [];
+const icv = $('i-cv'), ictx = icv.getContext('2d');
+function sizeIntro(){ const d = devicePixelRatio || 1; icv.width = innerWidth * d; icv.height = innerHeight * d; ictx.setTransform(d,0,0,d,0,0); }
+function mkParticle(){ return { x:Math.random()*innerWidth, y:innerHeight*(.3+Math.random()*.65), r:.6+Math.random()*1.9, vx:.1+Math.random()*.35, vy:-.03-Math.random()*.1, a:Math.random()*6.28, s:.5+Math.random()*1.5 }; }
+function drawParticles(t){
+  ictx.clearRect(0, 0, innerWidth, innerHeight);
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy + Math.sin(t/1500 + p.a) * .08;
+    if (p.x > innerWidth + 10) { p.x = -10; p.y = innerHeight * (.3 + Math.random() * .65); }
+    const al = .25 + .55 * Math.abs(Math.sin(t/1000 * p.s + p.a));
+    ictx.beginPath(); ictx.fillStyle = 'rgba(255,205,140,' + al + ')';
+    if (p.r > 1.8) { ictx.shadowBlur = 12; ictx.shadowColor = 'rgba(255,190,110,.8)'; } else ictx.shadowBlur = 0;
+    ictx.arc(p.x, p.y, p.r, 0, 6.283); ictx.fill();
+  }
+  introRaf = requestAnimationFrame(drawParticles);
+}
+sizeIntro(); particles = Array.from({ length:130 }, mkParticle); introRaf = requestAnimationFrame(drawParticles);
+addEventListener('resize', sizeIntro);
+function chime(){
+  try {
+    const A = new (window.AudioContext || window.webkitAudioContext)(), t = A.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      const o = A.createOscillator(), g = A.createGain(); o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t + i*.12); g.gain.linearRampToValueAtTime(.12, t + i*.12 + .05); g.gain.exponentialRampToValueAtTime(.0001, t + i*.12 + 1.6);
+      o.connect(g); g.connect(A.destination); o.start(t + i*.12); o.stop(t + i*.12 + 1.7);
+    });
+  } catch(e) {}
+}
+function enterHome(){
+  if (!introOn || introStage) return; introStage = 1; chime();
+  $('i-wait').style.opacity = 0;
+  setTimeout(() => { const w = $('i-welcome'); w.style.opacity = 1; w.style.transform = 'none'; }, 500);
+  setTimeout(() => {
+    const el = $('intro'); el.style.opacity = 0; $('app').classList.add('enter');
+    setTimeout(() => { el.style.display = 'none'; introOn = false; cancelAnimationFrame(introRaf); }, 1000);
+  }, 2600);
+}
+$('intro').addEventListener('click', enterHome);
 
 render();
 </script>
