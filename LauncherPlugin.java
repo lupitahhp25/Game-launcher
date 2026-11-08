@@ -137,6 +137,49 @@ public class LauncherPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void listApps(PluginCall call) {
+        PackageManager pm = getContext().getPackageManager();
+        Intent i = new Intent(Intent.ACTION_MAIN);
+        i.addCategory(Intent.CATEGORY_LAUNCHER);
+        Set<String> seen = new HashSet<>();
+        JSArray out = new JSArray();
+        for (android.content.pm.ResolveInfo r : pm.queryIntentActivities(i, 0)) {
+            android.content.pm.ApplicationInfo a = r.activityInfo.applicationInfo;
+            if (a.packageName.equals(getContext().getPackageName()) || !seen.add(a.packageName)) continue;
+            boolean game = (a.flags & android.content.pm.ApplicationInfo.FLAG_IS_GAME) != 0;
+            if (Build.VERSION.SDK_INT >= 26 && a.category == android.content.pm.ApplicationInfo.CATEGORY_GAME) game = true;
+            JSObject o = new JSObject();
+            o.put("name", String.valueOf(r.loadLabel(pm)));
+            o.put("pkg", a.packageName);
+            o.put("game", game);
+            out.put(o);
+        }
+        JSObject res = new JSObject();
+        res.put("apps", out);
+        call.resolve(res);
+    }
+
+    @PluginMethod
+    public void appIcon(PluginCall call) {
+        String pkg = call.getString("package");
+        try {
+            android.graphics.drawable.Drawable d = getContext().getPackageManager().getApplicationIcon(pkg);
+            int n = 160;
+            android.graphics.Bitmap b = android.graphics.Bitmap.createBitmap(n, n, android.graphics.Bitmap.Config.ARGB_8888);
+            android.graphics.Canvas c = new android.graphics.Canvas(b);
+            d.setBounds(0, 0, n, n);
+            d.draw(c);
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            b.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, bos);
+            JSObject r = new JSObject();
+            r.put("image", "data:image/png;base64," + android.util.Base64.encodeToString(bos.toByteArray(), android.util.Base64.NO_WRAP));
+            call.resolve(r);
+        } catch (Exception e) {
+            call.reject("Sin icono: " + e.getMessage());
+        }
+    }
+
+    @PluginMethod
     public void hasAllFiles(PluginCall call) {
         boolean ok = Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager();
         JSObject r = new JSObject();

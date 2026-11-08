@@ -43,6 +43,10 @@
   .qrow:hover { background:rgba(255,255,255,.12); }
   #qmenu, #opts { background:rgba(18,26,48,.88); backdrop-filter:blur(30px); border:1px solid rgba(255,255,255,.14); box-shadow:0 20px 60px rgba(0,0,0,.5); }
   .avbtn { width:clamp(34px,9vh,46px); height:clamp(34px,9vh,46px); border-radius:9999px; background:linear-gradient(135deg,#5b8cff,#6a4cff) center/cover; box-shadow:0 0 0 2px rgba(255,255,255,.55); font-weight:500; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  #qmenu { max-height:75vh; overflow-y:auto; }
+  .wz-ico { height:min(32vh,14rem); width:auto; border-radius:22%; box-shadow:0 20px 60px rgba(0,0,0,.5); flex-shrink:0; }
+  #wiz h1 { font-size:clamp(1.4rem,5.5vh,2.4rem); font-weight:300; line-height:1.15; }
+  #wiz p { color:rgba(255,255,255,.65); font-size:clamp(.8rem,2.6vh,1rem); line-height:1.4; }
 </style>
 </head>
 <body>
@@ -67,9 +71,12 @@
         <div id="qmenu" class="hidden absolute right-0 top-full mt-3 z-30 w-64 rounded-3xl p-2">
           <button id="scanbtn" class="qrow"><span class="w-6 text-center">📁</span>Escanear ROMs</button>
           <button id="ssbtn" class="qrow"><span class="w-6 text-center">🗄️</span>Carátulas y datos</button>
+          <button id="appsbtn" class="qrow"><span class="w-6 text-center">📱</span>Agregar juegos de Android</button>
+          <button id="rescanbtn" class="qrow"><span class="w-6 text-center">🔄</span>Re-escanear mi carpeta</button>
           <button id="profbtn" class="qrow"><span class="w-6 text-center">👤</span>Perfil y foto</button>
           <button id="mute" class="qrow"><span class="w-6 text-center">🔇</span>Sonido: apagado</button>
           <button id="fs" class="qrow"><span class="w-6 text-center">⛶</span>Pantalla completa</button>
+          <button id="setupbtn" class="qrow"><span class="w-6 text-center">⚙️</span>Repetir configuración</button>
           <div id="gpad" class="px-4 py-2 text-xs text-white/50">🎮 Conectar mando</div>
         </div>
       </div>
@@ -88,6 +95,7 @@
     </footer>
   </div>
 
+  <div id="wiz" class="fixed inset-0 z-[70] hidden items-center justify-center p-6" style="background:radial-gradient(ellipse at 30% 35%,#16264d,#050a18 70%)"></div>
   <div id="intro" class="fixed inset-0 z-[60] overflow-hidden" style="background:#04070d;transition:opacity 1s ease">
     <div class="i-teal absolute inset-0"></div>
     <div class="i-spot absolute"></div>
@@ -105,8 +113,8 @@
       <p id="i-name" class="text-white/85 mt-3">Jugador 1</p>
     </div>
   </div>
-  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 hidden bg-white/15 backdrop-blur-xl text-xs font-medium px-5 py-2 rounded-full border border-white/20"></div>
-  <div id="modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-md items-center justify-center p-4"></div>
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[95] hidden bg-white/15 backdrop-blur-xl text-xs font-medium px-5 py-2 rounded-full border border-white/20"></div>
+  <div id="modal" class="fixed inset-0 z-[90] hidden bg-black/70 backdrop-blur-md items-center justify-center p-4"></div>
 </div>
 
 <script>
@@ -119,7 +127,8 @@ const PLATFORMS = {
   N3DS:{name:'Nintendo 3DS',code:'3DS',color:'bg-rose-600'},
   WINDOWS:{name:'Windows PC',code:'WIN',color:'bg-cyan-600'},
   GBA:{name:'Game Boy Advance',code:'GBA',color:'bg-amber-600'},
-  XBOX:{name:'Xbox Clásico',code:'XBOX',color:'bg-green-700'}
+  XBOX:{name:'Xbox Clásico',code:'XBOX',color:'bg-green-700'},
+  PS1:{name:'PlayStation',code:'PS1',color:'bg-slate-600'}
 };
 const CATS = ['ALL','NATIVE APPS','EMULATORS','FAVORITES','RECENTLY PLAYED'];
 const games = [];
@@ -132,7 +141,7 @@ const $ = id => document.getElementById(id);
 const list = () => games.filter(g =>
   !(cat==='NATIVE APPS' && g.type!=='NATIVE') && !(cat==='EMULATORS' && g.type!=='EMULATOR') &&
   !(cat==='FAVORITES' && !g.fav) && !(cat==='RECENTLY PLAYED' && !g.played) && !(plat!=='ALL' && g.platform!==plat) && (!q || (g.title+' '+g.platform).toLowerCase().includes(q)));
-const clean = t => String(t).replace(/(\.(xiso|iso|cso|chd|bin|rvz|gcm|nsp|xci|3ds|cia|gba|pbp))+$/i, '');
+const clean = t => String(t).replace(/(\.(xiso|iso|cso|chd|bin|rvz|gcm|nsp|xci|3ds|cia|gba|pbp|cue|wbfs|gcz))+$/i, '');
 const grad = g => `linear-gradient(135deg, ${g[0]}, ${g[1]})`;
 
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.remove('hidden'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.add('hidden'),2500); }
@@ -224,6 +233,7 @@ $('l1').onclick = () => shiftCat(-1);
 $('r1').onclick = () => shiftCat(1);
 $('modal').onclick = e => { if (e.target.id==='modal') closeModal(); };
 document.addEventListener('keydown', e => {
+  if (wizOn) return;
   if (introOn) { if (e.key === 'Enter' || e.key === ' ') enterHome(); return; }
   if (!$('modal').classList.contains('hidden')) { if (e.key==='Escape') closeModal(); return; }
   const n = list().length || 1;
@@ -265,7 +275,7 @@ let gpLast = 0;
 function pad(){
   const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find(g => g && g.connected);
   $('gpad').textContent = gp ? '🎮 Mando listo' : '🎮 Conectar mando';
-  if (introOn) { if (gp && gp.buttons[9] && gp.buttons[9].pressed) enterHome(); }
+  if (introOn) { if (!wizOn && gp && gp.buttons[9] && gp.buttons[9].pressed) enterHome(); }
   else if (gp && Date.now() - gpLast > 200) {
     const b = i => gp.buttons[i] && gp.buttons[i].pressed, x = gp.axes[0] || 0, n = list().length || 1;
     const open = !$('modal').classList.contains('hidden');
@@ -295,11 +305,12 @@ const EMU = {
   PS2: { activity:'xyz.aethersx2.android.EmulationActivity', action:'android.intent.action.MAIN', extraKey:'bootPath' },
   PSP: { activity:'org.ppsspp.ppsspp.PpssppActivity', action:'android.intent.action.VIEW', data:true },
   GAMECUBE: { activity:'org.dolphinemu.dolphinemu.ui.main.MainActivity', action:'android.intent.action.MAIN', extraKey:'AutoStartFile' },
+  PS1: { activity:'com.github.stenzek.duckstation.EmulationActivity', action:'android.intent.action.MAIN', extraKey:'bootPath' },
   SWITCH: { force:true, package:'dev.eden.eden_emulator', hint:'eden', activity:'org.yuzu.yuzu_emu.activities.EmulationActivity', action:'android.intent.action.VIEW', saf:true },
   XBOX: { force:true, package:'com.rfandango.hakux', hint:'hakux' }
 };
-const PLAT_EMU = { PS2:'xyz.aethersx2.android', PSP:'org.ppsspp.ppsspp', GAMECUBE:'org.dolphinemu.dolphinemu', SWITCH:'dev.eden.eden_emulator', N3DS:'org.citra.citra_emu', GBA:'com.retroarch', XBOX:'com.rfandango.hakux' };
-const EXTS = { PS2:'.iso,.chd,.bin', PSP:'.cso,.iso,.pbp', GAMECUBE:'.rvz,.iso,.gcm', SWITCH:'.nsp,.xci', N3DS:'.3ds,.cia', GBA:'.gba', XBOX:'.iso,.xiso' };
+const PLAT_EMU = { PS2:'xyz.aethersx2.android', PSP:'org.ppsspp.ppsspp', GAMECUBE:'org.dolphinemu.dolphinemu', SWITCH:'dev.eden.eden_emulator', N3DS:'org.citra.citra_emu', GBA:'com.retroarch', XBOX:'com.rfandango.hakux', PS1:'com.github.stenzek.duckstation' };
+const EXTS = { PS2:'.iso,.chd,.bin', PSP:'.cso,.iso,.pbp', GAMECUBE:'.rvz,.iso,.gcm', SWITCH:'.nsp,.xci', N3DS:'.3ds,.cia', GBA:'.gba', XBOX:'.iso,.xiso', PS1:'.cue,.chd,.pbp' };
 let lastPath = '/storage/emulated/0/ROMS/PS2', lastPlat = 'PS2';
 
 async function launchGame(id){
@@ -352,8 +363,8 @@ async function runScan(){
 
 
 // ===== ScreenScraper + carátulas gratuitas (Libretro) =====
-const SSYS = { PS2:58, PSP:61, SWITCH:225, GAMECUBE:13, N3DS:17, GBA:12, XBOX:32 };
-const LIBR = { PS2:'Sony - PlayStation 2', PSP:'Sony - PlayStation Portable', SWITCH:'Nintendo - Switch', GAMECUBE:'Nintendo - GameCube', N3DS:'Nintendo - Nintendo 3DS', GBA:'Nintendo - Game Boy Advance', XBOX:'Microsoft - Xbox' };
+const SSYS = { PS2:58, PSP:61, SWITCH:225, GAMECUBE:13, N3DS:17, GBA:12, XBOX:32, PS1:57 };
+const LIBR = { PS2:'Sony - PlayStation 2', PSP:'Sony - PlayStation Portable', SWITCH:'Nintendo - Switch', GAMECUBE:'Nintendo - GameCube', N3DS:'Nintendo - Nintendo 3DS', GBA:'Nintendo - Game Boy Advance', XBOX:'Microsoft - Xbox', PS1:'Sony - PlayStation' };
 let cred = { user:'', pass:'', devid:'', devpass:'' };
 try { Object.assign(cred, JSON.parse(localStorage.getItem('gl_ss') || '{}')); } catch(e) {}
 let sopt = { covers:true, fondo:true, video:false, sinopsis:true };
@@ -406,7 +417,7 @@ function readSS(){
 }
 async function runScrape(items){
   if (scraping) return; readSS();
-  const out = $('ssr'); items = items.filter(g => g.type !== 'NATIVE');
+  const out = { set textContent(t){ say(t); } }; items = items.filter(g => g.type !== 'NATIVE');
   if (!items.length) { out.textContent = 'No hay juegos de emulador para scrapear.'; return; }
   scraping = true; let ok = 0, lastErr = null;
   for (let i = 0; i < items.length; i++) {
@@ -527,6 +538,131 @@ function openProfile(){
   $('pfsave').onclick = () => { profile.name = $('pfname').value.trim() || 'Jugador 1'; saveProfile(); applyProfile(); closeModal(); toast('✅ Perfil guardado'); };
 }
 applyProfile();
+
+
+// ===== Carpeta de juegos: escaneo automático por consola =====
+const ALIAS = {
+  PS2:['ps2','playstation2','sonyplaystation2'], PSP:['psp','playstationportable','sonyplaystationportable'],
+  PS1:['psx','ps1','psone','playstation','playstation1','sonyplaystation','duckstation'],
+  GAMECUBE:['gc','ngc','gamecube','nintendogamecube','wii','nintendowii','dolphin'],
+  SWITCH:['switch','nsw','nintendoswitch','eden','yuzu','suyu'], N3DS:['3ds','n3ds','nintendo3ds'],
+  GBA:['gba','gameboyadvance'], XBOX:['xbox','x1','originalxbox','xboxclassic','hakux']
+};
+const EXT_ONLY = { '.nsp':'SWITCH','.xci':'SWITCH','.cso':'PSP','.pbp':'PSP','.rvz':'GAMECUBE','.gcm':'GAMECUBE','.gcz':'GAMECUBE','.wbfs':'GAMECUBE','.3ds':'N3DS','.cia':'N3DS','.gba':'GBA','.xiso':'XBOX','.cue':'PS1' };
+const ALL_EXTS = '.iso,.chd,.cso,.pbp,.cue,.rvz,.gcm,.gcz,.wbfs,.nsp,.xci,.3ds,.cia,.gba,.xiso';
+let seq = 0;
+function classify(f){
+  if (/\.xiso\b/i.test(f.name)) return 'XBOX';
+  const parts = f.path.toLowerCase().split('/').slice(0, -1).reverse();
+  for (const seg of parts) { const k = seg.replace(/[^a-z0-9]/g, ''); for (const [pl, al] of Object.entries(ALIAS)) if (al.includes(k)) return pl; }
+  const m = f.path.toLowerCase().match(/\.[a-z0-9]+$/); return m ? (EXT_ONLY[m[0]] || null) : null;
+}
+async function scanRootAll(path){
+  const r = await Launcher.scan({ path, exts: ALL_EXTS });
+  const found = {}; let added = 0, unknown = 0;
+  r.files.forEach(f => {
+    const pl = classify(f); if (!pl) { unknown++; return; }
+    if (games.some(g => g.rom === f.path)) return;
+    const folder = f.path.substring(0, f.path.lastIndexOf('/'));
+    games.push({ id:'s' + Date.now() + '_' + (seq++), title:clean(f.name).replace(/_+/g, ' '), type:'EMULATOR', platform:pl, publisher:'—', year:'—', fav:false, played:false, g:['#1e3a8a','#111827'], desc:'ROM detectada en ' + folder, folder, pkg:PLAT_EMU[pl], rom:f.path, emu:PLATFORMS[pl].name });
+    added++; found[pl] = (found[pl] || 0) + 1;
+  });
+  save(); idx = 0; render();
+  return { total:r.files.length, added, unknown, found };
+}
+function say(t){ const a = $('ssr'); if (a) a.textContent = t; const w = $('wz-st'); if (w) w.textContent = t; }
+
+// ===== Juegos nativos de Android =====
+async function openAppPicker(done){
+  const m = $('modal'); m.classList.remove('hidden'); m.classList.add('flex'); m.style.alignItems = '';
+  if (!Launcher) { m.innerHTML = '<div class="p-6 text-center"><p>Esto solo funciona dentro de la app Android.</p><button onclick="closeModal()" class="mt-4 px-5 py-2 bg-white/10 rounded-full text-xs">Cerrar</button></div>'; return; }
+  m.innerHTML = '<div class="p-6 text-sm text-white/70">Buscando apps instaladas…</div>';
+  let apps = [];
+  try { apps = (await Launcher.listApps()).apps; } catch(e) { m.innerHTML = '<div class="p-6">⚠️ ' + (e.message || e) + '<br><button onclick="closeModal()" class="mt-4 px-5 py-2 bg-white/10 rounded-full text-xs">Cerrar</button></div>'; return; }
+  apps.sort((a, b) => a.name.localeCompare(b.name));
+  const have = new Set(games.filter(g => g.type === 'NATIVE').map(g => g.pkg));
+  const picked = new Set(); let onlyGames = apps.some(a => a.game), q2 = '';
+  m.innerHTML = `<div class="w-full max-w-lg p-5">
+    <h3 class="text-lg font-semibold mb-1">📱 Juegos de Android</h3>
+    <p class="text-[11px] text-white/60 mb-3">Marca los que quieras ver en tu launcher.</p>
+    <div class="flex gap-2 mb-2"><input id="apq" placeholder="Buscar…" class="flex-1 min-w-0 bg-black/40 border border-white/20 rounded-lg p-2 text-xs outline-none"><button id="aptab" class="px-3 py-2 bg-white/15 rounded-lg text-xs whitespace-nowrap"></button></div>
+    <div id="aplist" class="overflow-y-auto no-scrollbar" style="max-height:42vh"></div>
+    <div class="flex justify-end gap-2 mt-3"><button onclick="closeModal()" class="px-4 py-2 bg-white/10 rounded-full text-xs">Cancelar</button><button id="apadd" class="px-5 py-2 bg-white text-black rounded-full text-xs font-semibold">Agregar</button></div></div>`;
+  const draw = () => {
+    $('aptab').textContent = onlyGames ? 'Mostrando: juegos' : 'Mostrando: todas';
+    const L = apps.filter(a => (!onlyGames || a.game) && a.name.toLowerCase().includes(q2));
+    $('aplist').innerHTML = L.map(a => `<label class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 text-sm"><input type="checkbox" data-pkg="${a.pkg}" ${picked.has(a.pkg) || have.has(a.pkg) ? 'checked' : ''} ${have.has(a.pkg) ? 'disabled' : ''} class="w-4 h-4 accent-blue-500"><span class="flex-1 truncate">${a.name}</span>${have.has(a.pkg) ? '<span class="text-[10px] text-white/40">agregado</span>' : ''}</label>`).join('') || '<p class="text-xs text-white/50 p-3">Sin resultados.</p>';
+    $('aplist').querySelectorAll('input[data-pkg]').forEach(c => c.onchange = () => { c.checked ? picked.add(c.dataset.pkg) : picked.delete(c.dataset.pkg); });
+  };
+  $('apq').oninput = e => { q2 = e.target.value.toLowerCase(); draw(); };
+  $('aptab').onclick = () => { onlyGames = !onlyGames; draw(); };
+  $('apadd').onclick = async () => {
+    const btn = $('apadd'); btn.disabled = true; btn.textContent = 'Agregando…'; let n = 0;
+    for (const pkg of picked) {
+      const a = apps.find(x => x.pkg === pkg); let img = null;
+      try { img = (await Launcher.appIcon({ package: pkg })).image; } catch(e) {}
+      games.push({ id:'a' + Date.now() + '_' + (seq++), title:a.name, type:'NATIVE', platform:'ANDROID', publisher:'—', year:'—', fav:false, played:false, g:['#14532d','#052e16'], desc:'Juego de Android instalado.', pkg, rom:'N/A', emu:'App nativa', img });
+      n++;
+    }
+    save(); render(); closeModal(); toast(n ? '✅ ' + n + ' juego(s) agregados' : 'No marcaste ninguno'); if (done) done(n);
+  };
+  draw();
+}
+
+// ===== Configuración inicial (primera vez) =====
+let wizOn = false, wizStep = 0, wizRoot = localStorage.getItem('gl_root') || '', wizTimer = 0;
+function startWizard(step){ wizOn = true; wizStep = step || 0; $('wiz').style.display = 'flex'; wizRender(); }
+function wizEnd(){ try { localStorage.setItem('gl_setup', '1'); } catch(e) {} clearInterval(wizTimer); $('wiz').style.display = 'none'; wizOn = false; render(); }
+function wizGo(n){ clearInterval(wizTimer); wizStep = n; wizRender(); }
+function wizRender(){
+  const dots = Array.from({ length:6 }, (_, i) => `<span class="w-2.5 h-2.5 rounded-full ${i <= wizStep ? 'bg-white' : 'bg-white/25'}"></span>`).join('');
+  const pri = (id, t) => `<button id="${id}" class="playbtn rounded-full bg-white text-black font-semibold">${t}</button>`;
+  const sec = (id, t) => `<button id="${id}" class="px-5 py-2.5 rounded-full bg-white/15 text-sm font-semibold">${t}</button>`;
+  let h = '';
+  if (wizStep === 0) h = `<img src="icon.png" class="wz-ico"><div class="space-y-3"><h1>Bienvenido a PS5 Launcher</h1><p>Vamos a configurar unas cosas para que todos tus juegos aparezcan solos, sin escanear uno por uno.</p>${pri('wz-a','Comenzar la configuración')}</div>`;
+  if (wizStep === 1) h = `<div class="space-y-3 max-w-xl"><h1>Permiso de archivos</h1><p>El launcher necesita ver tus carpetas para encontrar tus juegos. Activa <b>“Permitir acceso a todos los archivos”</b> en la pantalla que se abre y vuelve aquí.</p><div class="flex flex-wrap gap-2">${sec('wz-a','Abrir pantalla de permisos')}<button id="wz-n" class="playbtn rounded-full bg-white text-black font-semibold" style="opacity:.35" disabled>Continuar</button></div><p id="wz-st"></p></div>`;
+  if (wizStep === 2) h = `<div class="space-y-3 max-w-xl"><h1>Carpeta de tus juegos</h1><p>Elige la carpeta principal donde guardas tus ROMs. Dentro, ordénalas en subcarpetas por consola: <b>PS2, PSP, PSX, GameCube, Switch, 3DS, GBA, Xbox</b>.</p><div class="flex flex-wrap gap-2">${sec('wz-a','📂 Seleccionar carpeta')}<button id="wz-n" class="playbtn rounded-full bg-white text-black font-semibold" style="opacity:${wizRoot ? 1 : .35}" ${wizRoot ? '' : 'disabled'}>Continuar</button></div><p id="wz-st" class="font-mono text-xs">${wizRoot || ''}</p></div>`;
+  if (wizStep === 3) h = `<div class="space-y-3 max-w-xl"><h1>Buscando tus juegos…</h1><p id="wz-st">Escaneando ${wizRoot}</p><div id="wz-res" class="text-sm text-white/80"></div><div class="flex flex-wrap gap-2"><button id="wz-c" class="px-5 py-2.5 rounded-full bg-white/15 text-sm font-semibold hidden">🖼️ Descargar carátulas gratis</button><button id="wz-n" class="playbtn rounded-full bg-white text-black font-semibold hidden">Continuar</button></div></div>`;
+  if (wizStep === 4) h = `<div class="space-y-3 max-w-xl"><h1>Juegos de Android</h1><p>¿Quieres agregar juegos que ya tienes instalados en el celular? Puedes hacerlo ahora o después desde el menú ☰.</p><div class="flex flex-wrap gap-2">${sec('wz-a','📱 Elegir apps')}${pri('wz-n','Continuar')}</div></div>`;
+  if (wizStep === 5) h = `<img src="icon.png" class="wz-ico"><div class="space-y-3"><h1>¡Todo listo!</h1><p id="wz-sum">Tu biblioteca está preparada. Si agregas juegos nuevos, usa “Re-escanear mi carpeta” en el menú ☰.</p>${pri('wz-n','Entrar')}</div>`;
+  $('wiz').innerHTML = `<div class="flex flex-col items-center gap-[4vh] w-full"><div class="flex items-center justify-center gap-[5vw]">${h}</div><div class="flex gap-3">${dots}</div></div>`;
+  const A = $('wz-a'), N = $('wz-n');
+  if (wizStep === 0) A.onclick = () => wizGo(1);
+  if (wizStep === 1) {
+    A.onclick = () => Launcher && Launcher.requestAllFiles();
+    const chk = async () => { let ok = true; try { ok = !Launcher || (await Launcher.hasAllFiles()).granted; } catch(e) {} if (ok) { clearInterval(wizTimer); $('wz-st').textContent = '✅ Permiso concedido'; N.disabled = false; N.style.opacity = 1; } };
+    wizTimer = setInterval(chk, 900); chk(); N.onclick = () => wizGo(2);
+  }
+  if (wizStep === 2) {
+    A.onclick = async () => { try { const r = await Launcher.pickFolder(); if (r && r.path) { wizRoot = r.path; try { localStorage.setItem('gl_root', wizRoot); } catch(e) {} wizRender(); } } catch(e) { if (e.message !== 'Cancelado') $('wz-st').textContent = '⚠️ ' + (e.message || e); } };
+    N.onclick = () => wizGo(3);
+  }
+  if (wizStep === 3) wizScan();
+  if (wizStep === 4) { A.onclick = () => openAppPicker(); N.onclick = () => wizGo(5); }
+  if (wizStep === 5) { const t = games.length; $('wz-sum').textContent = t + ' juego(s) en tu biblioteca. Si agregas más, usa “Re-escanear mi carpeta” en el menú ☰.'; N.onclick = wizEnd; }
+}
+async function wizScan(){
+  const st = $('wz-st'), res = $('wz-res');
+  try {
+    const r = await scanRootAll(wizRoot);
+    const names = Object.entries(r.found).map(([k, v]) => '<b>' + (PLATFORMS[k] ? PLATFORMS[k].code : k) + '</b>: ' + v).join(' · ');
+    st.textContent = r.added + ' juego(s) nuevos de ' + r.total + ' archivos' + (r.unknown ? ' (' + r.unknown + ' sin consola reconocida)' : '') + '.';
+    res.innerHTML = names || 'No se encontraron juegos. Revisa que las subcarpetas tengan nombre de consola (PS2, PSP…).';
+    document.querySelector('#wiz h1').textContent = r.added ? '¡Juegos encontrados!' : 'No encontré juegos';
+  } catch (e) { st.textContent = '⚠️ ' + (e.message || e); }
+  const c = $('wz-c'), n = $('wz-n'); c.classList.remove('hidden'); n.classList.remove('hidden');
+  c.onclick = async () => { c.disabled = true; c.style.opacity = .5; sopt = { covers:true, fondo:true, video:false, sinopsis:false }; await runScrape(games.slice()); c.textContent = '✅ Carátulas listas'; };
+  n.onclick = () => wizGo(4);
+}
+$('rescanbtn').onclick = async () => {
+  if (!Launcher) { toast('Solo funciona dentro de la app Android'); return; }
+  if (!wizRoot) { startWizard(1); return; }
+  toast('🔄 Escaneando ' + wizRoot + '…');
+  try { const r = await scanRootAll(wizRoot); toast('✅ ' + r.added + ' juego(s) nuevos'); } catch(e) { toast('⚠️ ' + (e.message || e)); }
+};
+$('appsbtn').onclick = () => openAppPicker();
+$('setupbtn').onclick = () => startWizard(0);
+if (Launcher && !localStorage.getItem('gl_setup')) { if (games.length) { try { localStorage.setItem('gl_setup', '1'); } catch(e) {} } else startWizard(0); }
 
 render();
 </script>
