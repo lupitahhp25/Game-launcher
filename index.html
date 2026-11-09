@@ -107,6 +107,8 @@
   .pfx.xb { --g:#5fd35f; box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 40px rgba(60,200,60,.35); }
   .pfx.nin { --c:linear-gradient(90deg,#e60012 50%,#00a1e9 50%); --g:#ff4d5a; }
   .pfx.gen { --c:linear-gradient(135deg,#6b7280,#374151); --g:#cbd5e1; }
+  #modal .mf, #wiz .mf { outline:3px solid #fff; outline-offset:2px; border-radius:.75rem; }
+  #modal button.mf, #wiz button.mf { border-radius:9999px; }
 </style>
 </head>
 <body>
@@ -215,7 +217,7 @@ const U = (id,w)=>`https://images.unsplash.com/photo-${id}?q=80&w=${w}&auto=form
 const V = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/';
 try { const sv = JSON.parse(localStorage.getItem('gl_games') || 'null'); const keep = Array.isArray(sv) ? sv.filter(x => typeof x.id === 'string') : []; keep.forEach(x => games.push(x)); if (Array.isArray(sv) && keep.length !== sv.length) save(); } catch(e) {}
 function save(){ try { localStorage.setItem('gl_games', JSON.stringify(games)); } catch(e) {} }
-let cat = 'ALL', plat = 'ALL', idx = 0, q = '', autoScroll = false, autoT = 0, lastTick = 0, lastSt = null, lastPadKey = '', lastPad = null, padT = 0;
+let cat = 'ALL', plat = 'ALL', idx = 0, q = '', autoScroll = false, autoT = 0, lastTick = 0, mfCur = null, lastSt = null, lastPadKey = '', lastPad = null, padT = 0;
 const $ = id => document.getElementById(id);
 const list = () => games.filter(g =>
   !(cat==='NATIVE APPS' && g.type!=='NATIVE') && !(cat==='EMULATORS' && g.type!=='EMULATOR') &&
@@ -302,7 +304,7 @@ function openModal(g, kind){ sfx('ok');
     <div class="mt-5 flex justify-end"><button onclick="closeModal()" class="px-5 py-2 bg-white/10 rounded-lg text-xs">Entendido</button></div>`;
   m.innerHTML = `<div class="bg-gray-900 border border-white/20 rounded-2xl w-full max-w-lg p-6 shadow-2xl">${body}</div>`;
 }
-function closeModal(){ sfx('back'); const m=$('modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+function closeModal(){ sfx('back'); mfCur = null; document.querySelectorAll('.mf').forEach(n => n.classList.remove('mf')); const m=$('modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
 
 document.addEventListener('click', e => {
   if (!e.target.closest('#optbtn')) { const o = $('opts'); if (o) o.classList.add('hidden'); }
@@ -319,7 +321,12 @@ document.addEventListener('keydown', e => {
   if (wizOn) return;
   if (introOn) { if (e.key === 'Enter' || e.key === ' ') enterHome(); return; }
   if (panelOn()) { if (e.key === 'ArrowDown') pmMove(1); else if (e.key === 'ArrowUp') pmMove(-1); else if (e.key === 'Enter') pmGo(); else if (e.key === 'Escape' || e.key === 'Backspace') pmBack(); return; }
-  if (!$('modal').classList.contains('hidden')) { if (e.key==='Escape') closeModal(); return; }
+  if (!$('modal').classList.contains('hidden')) {
+    const ae = document.activeElement || {}, typing = /INPUT|SELECT|TEXTAREA/.test(ae.tagName || '') && ae.type !== 'checkbox';
+    if (e.key === 'Escape') closeModal();
+    else if (!typing) { if (e.key === 'ArrowDown') mfMove(0, 1); else if (e.key === 'ArrowUp') mfMove(0, -1); else if (e.key === 'ArrowRight') mfMove(1, 0); else if (e.key === 'ArrowLeft') mfMove(-1, 0); else if (e.key === 'Enter' && ae === document.body) mfAct(); }
+    return;
+  }
   const n = list().length || 1;
   if (e.key==='ArrowRight'){ setIdx(idx+1); }
   else if (e.key==='ArrowLeft'){ setIdx(idx-1); }
@@ -363,13 +370,14 @@ function pad(){
   const gp = [...(navigator.getGamepads ? navigator.getGamepads() : [])].find(g => g && g.connected);
   $('gpad').textContent = gp ? '🎮 Mando listo' : '🎮 Conectar mando'; $('gpTop').style.opacity = gp ? 1 : .3;
   { const key = gp ? gp.id + '#' + gp.index : ''; if (key !== lastPadKey) { if (gp) onPadConnect(gp); else if (lastPadKey) onPadDisconnect(); lastPadKey = key; } }
-  if (introOn) { if (!wizOn && gp && gp.buttons[9] && gp.buttons[9].pressed) enterHome(); }
+  if (wizOn) { if (gp && Date.now() - gpLast > 200 && gpUiNav(gp)) gpLast = Date.now(); }
+  else if (introOn) { if (gp && gp.buttons[9] && gp.buttons[9].pressed) enterHome(); }
   else if (gp && Date.now() - gpLast > 200) {
     const b = i => gp.buttons[i] && gp.buttons[i].pressed, x = gp.axes[0] || 0, n = list().length || 1;
     const open = !$('modal').classList.contains('hidden');
     let act = true;
     if (panelOn()) { const y = gp.axes[1] || 0; if (b(13) || y > .5) pmMove(1); else if (b(12) || y < -.5) pmMove(-1); else if (b(0)) pmGo(); else if (b(1)) pmBack(); else act = false; }
-    else if (open) { if (b(1)) closeModal(); else act = false; }
+    else if (open) { if (!gpUiNav(gp)) act = false; }
     else if (b(15) || x > .4) { setIdx(idx+1); }
     else if (b(14) || x < -.4) { setIdx(idx-1); }
     else if (b(4)) shiftCat(-1);
@@ -462,9 +470,9 @@ let sopt = { covers:true, fondo:true, video:false, sinopsis:true, bg:(localStora
 let missVid = 0;
 const MODE_LABEL = { shot:'Captura', cover:'Portada', video:'Video' };
 const bgMode = g => g.bgMode || (g.vid ? 'video' : 'shot');
-let scraping = false;
+let scraping = false, scrapeCancel = false, scrapeDone = 0, scrapeTotal = 0;
 const hasSS = () => cred.user && cred.pass && cred.devid && cred.devpass;
-const probe = url => new Promise(res => { const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = url; });
+const probe = url => new Promise(res => { const i = new Image(); const t = setTimeout(() => { i.src = ''; res(false); }, 8000); i.onload = () => { clearTimeout(t); res(true); }; i.onerror = () => { clearTimeout(t); res(false); }; i.src = url; });
 const pickMedia = (m, type) => {
   const L = (m || []).filter(x => x.type === type); if (!L.length) return null;
   for (const r of ['us','wor','eu','ss','jp']) { const f = L.find(x => x.region === r); if (f) return f.url; }
@@ -476,6 +484,14 @@ async function ssLookup(g){
   const t = await r.text();
   let j; try { j = JSON.parse(t); } catch(e) { throw new Error(t.replace(/<[^>]+>/g,'').trim().slice(0,90) || 'Respuesta inválida'); }
   return j.response && j.response.jeu;
+}
+function libNames(g){
+  const base = clean((g.rom || g.title).split('/').pop()).replace(/\s*\[[^\]]*\]/g, '').trim();
+  const tags = base.match(/\([^)]*\)/g) || [], noTags = base.replace(/\s*\([^)]*\)/g, '').trim();
+  const set = [base];
+  if (tags.length && noTags) set.push(noTags + ' ' + tags[0]);
+  if (noTags) { ['(USA)', '(Europe)', '(USA, Europe)', '(World)', '(Japan)'].forEach(r => set.push(noTags + ' ' + r)); set.push(noTags); }
+  return [...new Set(set)].map(n => encodeURIComponent(n.replace(/[&*\/:`<>?\\|]/g, '_')));
 }
 async function scrapeOne(g){
   let jeu = null, err = null, got = false;
@@ -495,10 +511,9 @@ async function scrapeOne(g){
   }
   const lib = LIBR[g.platform];
   if (lib && ((sopt.covers && !has.c) || (needShot && !has.f))) {
-    const name = encodeURIComponent(clean((g.rom || g.title).split('/').pop()).replace(/[&*\/:`<>?\\|]/g, '_'));
-    const base = 'https://thumbnails.libretro.com/' + encodeURIComponent(lib) + '/';
-    if (sopt.covers && !has.c) { const u = base + 'Named_Boxarts/' + name + '.png'; if (await probe(u)) { g.img = u; got = true; } }
-    if (needShot && !has.f) { const u = base + 'Named_Snaps/' + name + '.png'; if (await probe(u)) { g.wall = u; got = true; } }
+    const base = 'https://thumbnails.libretro.com/' + encodeURIComponent(lib) + '/', names = libNames(g); let found = null;
+    if (sopt.covers && !has.c) { for (const n of names) { if (await probe(base + 'Named_Boxarts/' + n + '.png')) { g.img = base + 'Named_Boxarts/' + n + '.png'; found = n; got = true; break; } } }
+    if (needShot && !has.f) { for (const n of (found ? [found].concat(names.filter(x => x !== found)) : names)) { if (await probe(base + 'Named_Snaps/' + n + '.png')) { g.wall = base + 'Named_Snaps/' + n + '.png'; got = true; break; } } }
   }
   g.bgMode = bgm; if (bgm === 'video' && !g.vid) missVid++;
   g.scraped = got;
@@ -513,19 +528,26 @@ function readSS(){
   try { localStorage.setItem('gl_bg', sopt.bg); } catch(e) {}
 }
 async function runScrape(items){
-  if (scraping) return; readSS();
-  const out = { set textContent(t){ say(t); } }; items = items.filter(g => g.type !== 'NATIVE');
-  if (!items.length) { out.textContent = 'No hay juegos de emulador para scrapear.'; return; }
-  scraping = true; let ok = 0, lastErr = null; missVid = 0;
-  for (let i = 0; i < items.length; i++) {
-    out.textContent = '(' + (i+1) + '/' + items.length + ') ' + clean(items[i].title) + '…';
-    const r = await scrapeOne(items[i]);
-    if (r.got) ok++; if (r.err) lastErr = r.err;
-    save(); render();
-    if (hasSS()) await new Promise(r => setTimeout(r, 1300));
-  }
-  scraping = false;
-  out.textContent = ok + ' de ' + items.length + ' juegos actualizados.' + (missVid ? ' ' + missVid + ' sin video (se usó la captura).' : '') + (lastErr ? ' ScreenScraper dijo: ' + lastErr : '');
+  if (scraping) { say('Ya hay un scrapeo en curso (' + scrapeDone + '/' + scrapeTotal + '). Espera o toca “Detener”.'); return; }
+  readSS(); items = items.filter(g => g.type !== 'NATIVE');
+  if (!items.length) { say('No hay juegos de emulador para scrapear.'); return; }
+  scraping = true; scrapeCancel = false; scrapeDone = 0; scrapeTotal = items.length; missVid = 0;
+  let ok = 0, lastErr = null, next = 0; const slow = hasSS();
+  const worker = async () => {
+    while (next < items.length && !scrapeCancel) {
+      const g = items[next++];
+      try { const r = await scrapeOne(g); if (r.got) ok++; if (r.err) lastErr = r.err; } catch (e) { lastErr = e.message || String(e); }
+      scrapeDone++; say('(' + scrapeDone + '/' + scrapeTotal + ') ' + clean(g.title));
+      if (scrapeDone % 10 === 0) save();
+      if (slow) await new Promise(r => setTimeout(r, 1300));
+    }
+  };
+  try { await Promise.all(Array.from({ length: slow ? 1 : 6 }, worker)); }
+  finally { scraping = false; save(); render(); }
+  say((scrapeCancel ? 'Detenido. ' : '') + ok + ' de ' + scrapeDone + ' juegos actualizados' + (scrapeDone - ok > 0 ? ' (' + (scrapeDone - ok) + ' sin coincidencia en la base de carátulas)' : '') + '.'
+    + (missVid ? ' ' + missVid + ' sin video (se usó la captura).' : '')
+    + ((cred.user || cred.pass) && !slow ? ' Para usar ScreenScraper faltan el Dev ID y el Dev Password; se usaron las carátulas gratuitas.' : '')
+    + (lastErr ? ' ScreenScraper dijo: ' + lastErr : ''));
 }
 function openSS(){
   const m = $('modal'); m.classList.remove('hidden'); m.classList.add('flex'); m.style.alignItems = '';
@@ -542,15 +564,17 @@ function openSS(){
     <p class="text-[11px] text-white/60 mb-1">Qué se ve de fondo en cada juego:</p>
     <div id="bgsel" class="flex flex-wrap gap-2 mb-1" data-v="${sopt.bg || 'shot'}">${[['shot','🖼️ Captura'],['cover','📦 Portada'],['video','🎬 Video']].map(([v,t]) => `<button data-bgv="${v}" class="px-3 py-1.5 rounded-full text-xs ${(sopt.bg || 'shot')===v ? 'bg-white text-black font-semibold' : 'bg-white/10'}">${t}</button>`).join('')}</div>
     <p class="text-[10px] text-white/45 mb-3">El video solo se descarga con una cuenta de ScreenScraper. Sin video, se usa la captura.</p>
-    <p id="ssr" class="text-xs text-white/80 mb-3 min-h-[1rem]">Listo.</p>
+    <p id="ssr" class="text-xs text-white/80 mb-3 min-h-[1rem]">${scraping ? 'Scrapeando… (' + scrapeDone + '/' + scrapeTotal + ')' : 'Listo.'}</p>
     <div class="flex flex-wrap justify-end gap-2">
       <button onclick="readSS();closeModal()" class="px-4 py-2 bg-white/10 rounded-full text-xs">Cerrar</button>
+      <button id="ssstop" class="px-4 py-2 bg-white/10 rounded-full text-xs">Detener</button>
       <button id="ssgo" class="px-4 py-2 bg-white/20 rounded-full text-xs font-semibold">Este juego</button>
       <button id="ssall" class="px-5 py-2 bg-white text-black rounded-full text-xs font-semibold">Toda la biblioteca</button>
     </div></div>`;
   $('bgsel').onclick = e => { const b = e.target.closest('[data-bgv]'); if (!b) return; $('bgsel').dataset.v = b.dataset.bgv; $('bgsel').querySelectorAll('button').forEach(x => { x.className = 'px-3 py-1.5 rounded-full text-xs ' + (x === b ? 'bg-white text-black font-semibold' : 'bg-white/10'); }); };
   $('ssgo').onclick = () => { const g = list()[idx]; if (g) runScrape([g]); };
   $('ssall').onclick = () => runScrape(games.slice());
+  $('ssstop').onclick = () => { scrapeCancel = true; say('Deteniendo…'); };
 }
 
 
@@ -972,6 +996,41 @@ function openPadTest(){
     { i:'⚪', t:'Otro mando', s:'8BitDo, GameSir y similares', f:go('gen', 'Mando') },
     { i:'⏏️', t:'Desconexión', s:'Animación al quitar el mando', f:() => setTimeout(() => padFx('ps', 'DualSense', 1, true), 200) }
   ]);
+}
+
+
+// ===== Navegación con mando en ventanas y asistente =====
+const modalOpen = () => !$('modal').classList.contains('hidden');
+function mfRoot(){ return modalOpen() ? $('modal') : (wizOn ? $('wiz') : null); }
+function mfEls(){
+  const r = mfRoot(); if (!r) return [];
+  return [...r.querySelectorAll('button:not([disabled]), input:not([disabled]), select')].filter(e => e.type !== 'file' && e.getBoundingClientRect().width > 0 && e.offsetParent !== null);
+}
+function mfMark(el){
+  document.querySelectorAll('.mf').forEach(n => n.classList.remove('mf')); mfCur = el;
+  if (el) { (el.type === 'checkbox' ? (el.closest('label') || el) : el).classList.add('mf'); el.scrollIntoView({ block:'nearest', inline:'nearest' }); }
+}
+function mfMove(dx, dy){
+  const els = mfEls(); if (!els.length) return;
+  if (!mfCur || !els.includes(mfCur)) { mfMark(els[0]); sfx('move'); return; }
+  const c = mfCur.getBoundingClientRect(), cx = c.left + c.width / 2, cy = c.top + c.height / 2; let best = null, bs = 1e9;
+  for (const e of els) {
+    if (e === mfCur) continue; const r = e.getBoundingClientRect(), ddx = r.left + r.width / 2 - cx, ddy = r.top + r.height / 2 - cy;
+    if ((dx > 0 && ddx < 4) || (dx < 0 && ddx > -4) || (dy > 0 && ddy < 4) || (dy < 0 && ddy > -4)) continue;
+    const ov = dx ? !(r.bottom < c.top || r.top > c.bottom) : !(r.right < c.left || r.left > c.right);
+    const sc = (dx ? Math.abs(ddx) + Math.abs(ddy) * .3 : Math.abs(ddy) + Math.abs(ddx) * .3) + (ov ? 0 : 5000); if (sc < bs) { bs = sc; best = e; }
+  }
+  if (best) { mfMark(best); sfx('move'); }
+}
+function mfAct(){
+  const els = mfEls(); if (!mfCur || !els.includes(mfCur)) { if (els.length) mfMark(els[0]); return; }
+  sfx('ok'); const e = mfCur; if (e.tagName === 'INPUT' && e.type !== 'checkbox') e.focus(); else e.click();
+}
+function gpUiNav(gp){
+  const b = i => gp.buttons[i] && gp.buttons[i].pressed, x = gp.axes[0] || 0, y = gp.axes[1] || 0;
+  if (b(13) || y > .5) mfMove(0, 1); else if (b(12) || y < -.5) mfMove(0, -1); else if (b(15) || x > .5) mfMove(1, 0); else if (b(14) || x < -.5) mfMove(-1, 0);
+  else if (b(0)) mfAct(); else if (b(1)) { if (modalOpen()) closeModal(); else return false; } else return false;
+  return true;
 }
 
 render();
