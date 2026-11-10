@@ -222,6 +222,8 @@
   @keyframes dotb { 50%{transform:translateY(-1.6vh)} } @keyframes dfade { to{opacity:0;height:0} }
   .chk { font-size:5vh; opacity:0; animation:chkin .5s 1.9s both; text-align:center; }
   @keyframes chkin { from{opacity:0;transform:scale(.2)} to{opacity:1;transform:scale(1)} }
+  .prt { flex-shrink:0; display:flex; align-items:center; gap:.6em; font-size:clamp(.75rem,2.8vh,1.1rem); font-weight:600; }
+  #gpTop { cursor:pointer; pointer-events:auto; }
 </style>
 </head>
 <body>
@@ -238,7 +240,7 @@
         <span id="wifi" class="inline-flex"></span>
         <span class="inline-flex items-center gap-1"><span id="batic" class="inline-flex"></span><span id="batt"></span></span>
       </div>
-      <div id="gpTop" class="flex items-center gap-1 text-white" style="opacity:.3;font-size:clamp(.6rem,2.2vh,.8rem)"><svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="currentColor"><path d="M7 8h10a5 5 0 0 1 4.7 6.7l-.8 2.3a2.3 2.3 0 0 1-3.9.8L15.5 15h-7l-1.5 2.8a2.3 2.3 0 0 1-3.9-.8l-.8-2.3A5 5 0 0 1 7 8z"/></svg><b>1</b></div>
+      <button id="gpTop" class="flex items-center gap-1 text-white" style="opacity:.3;font-size:clamp(.6rem,2.2vh,.8rem)" title="Accesorios · batería de mandos"><svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="currentColor"><path d="M7 8h10a5 5 0 0 1 4.7 6.7l-.8 2.3a2.3 2.3 0 0 1-3.9.8L15.5 15h-7l-1.5 2.8a2.3 2.3 0 0 1-3.9-.8l-.8-2.3A5 5 0 0 1 7 8z"/></svg><b id="gpN">1</b></button>
       <div class="flex items-center gap-3 relative">
         <button id="sstop" class="ico" title="Carátulas y datos (scrapear)"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg></button>
         <button id="srch" class="ico" title="Buscar"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
@@ -274,6 +276,7 @@
         <div id="lbl" class="truncate min-w-0" style="padding-left:8vw"></div>
         <div class="flex items-center gap-5 flex-shrink-0">
           <button id="optbtn" class="hint"><span class="pillic"></span>OPCIONES</button>
+          <button id="accbtn" class="hint"><span class="pillic" style="width:1.2em;height:.75em"></span>ACCESORIOS</button>
           <button id="topbtn" class="hint"><span>△</span>MENÚ PRINCIPAL</button>
         </div>
       </div>
@@ -449,7 +452,7 @@ $('modal').onclick = e => { if (e.target.id==='modal') closeModal(); };
 document.addEventListener('keydown', e => {
   if (wizOn) return;
   if (introOn) { if (e.key === 'Enter' || e.key === ' ') enterHome(); return; }
-  if (panelOn()) { if (e.key === 'ArrowDown') pmMove(1); else if (e.key === 'ArrowUp') pmMove(-1); else if (e.key === 'Enter') pmGo(); else if (e.key === 'Escape' || e.key === 'Backspace') pmBack(); return; }
+  if (panelOn()) { if (e.key === 'a' || e.key === 'A') { togglePadsMenu(); return; } if (e.key === 'ArrowDown') pmMove(1); else if (e.key === 'ArrowUp') pmMove(-1); else if (e.key === 'Enter') pmGo(); else if (e.key === 'Escape' || e.key === 'Backspace') pmBack(); return; }
   if (!$('modal').classList.contains('hidden')) {
     const ae = document.activeElement || {}, typing = /INPUT|SELECT|TEXTAREA/.test(ae.tagName || '') && ae.type !== 'checkbox';
     if (e.key === 'Escape') closeModal();
@@ -462,6 +465,7 @@ document.addEventListener('keydown', e => {
   else if (e.key==='q'||e.key==='Q') shiftCat(-1);
   else if (e.key==='e'||e.key==='E') shiftCat(1);
   else if (e.key==='Enter'){ const g=list()[idx]; if (g) openModal(g,'launch'); }
+  else if (e.key==='a'||e.key==='A'){ openPadsMenu(); }
   else if (e.key==='s'||e.key==='S'){ const g=list()[idx]; if (g) openSS(); }
 });
 function tick(){ const d=new Date(); $('clock').textContent = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
@@ -505,7 +509,7 @@ function pad(){
     const b = i => gp.buttons[i] && gp.buttons[i].pressed, x = gp.axes[0] || 0, n = list().length || 1;
     const open = !$('modal').classList.contains('hidden');
     let act = true;
-    if (panelOn()) { const y = gp.axes[1] || 0; if (b(13) || y > .5) pmMove(1); else if (b(12) || y < -.5) pmMove(-1); else if (b(0)) pmGo(); else if (b(1)) pmBack(); else act = false; }
+    if (panelOn()) { const y = gp.axes[1] || 0; if (b(13) || y > .5) pmMove(1); else if (b(12) || y < -.5) pmMove(-1); else if (b(0)) pmGo(); else if (b(1)) pmBack(); else if (b(8) || b(16)) togglePadsMenu(); else act = false; }
     else if (open) { if (!gpUiNav(gp)) act = false; }
     else if (b(15) || x > .4) { setIdx(idx+1); }
     else if (b(14) || x < -.4) { setIdx(idx-1); }
@@ -513,6 +517,7 @@ function pad(){
     else if (b(5)) shiftCat(1);
     else if (b(0)) { const g = list()[idx]; if (g) openModal(g,'launch'); }
     else if (b(3)) { openMainMenu(); }
+    else if (b(8) || b(16)) { openPadsMenu(); }
     else if (b(9)) { openGameMenu(); }
     else if (b(2)) { const g = list()[idx]; if (g) openSS(); }
     else act = false;
@@ -1048,7 +1053,7 @@ function openPanel(title, build, opt){ pstack.push({ title, build, opt: opt || {
 function pmRender(){
   const t = pmTop(); if (!t) return; t.items = t.build(); if (t.f >= t.items.length) t.f = 0;
   $('pttl').textContent = t.title; $('pside').style.display = t.opt.side ? 'flex' : 'none';
-  $('plist').innerHTML = t.items.map((it, i) => `<div class="prow ${i === t.f ? 'on' : ''} ${it.danger ? 'dng' : ''}" data-pi="${i}"><span class="pic">${it.i}</span><span class="ptx"><span class="plb">${it.t}</span>${it.s ? `<span class="psub">${it.s}</span>` : ''}</span>${it.go ? '<span class="pch">›</span>' : ''}</div>`).join('');
+  $('plist').innerHTML = t.items.map((it, i) => `<div class="prow ${i === t.f ? 'on' : ''} ${it.danger ? 'dng' : ''}" data-pi="${i}"><span class="pic">${it.i}</span><span class="ptx"><span class="plb">${it.t}</span>${it.s ? `<span class="psub">${it.s}</span>` : ''}</span>${it.r ? `<span class="prt">${it.r}</span>` : ''}${it.go ? '<span class="pch">›</span>' : ''}</div>`).join('');
   const on = $('plist').children[t.f]; if (on) on.scrollIntoView({ block:'nearest' });
 }
 function pmMove(d){ const t = pmTop(); if (!t || !t.items.length) return; t.f = (t.f + d + t.items.length) % t.items.length; sfx('move'); pmRender(); }
@@ -1086,6 +1091,7 @@ function openMainMenu(){
     { i:'🔍', t:'Buscar en la biblioteca', f:() => $('srch').click() },
     { i:'👤', t:'Perfil y foto', s:profile.name, go:true, f:() => $('profbtn').click() },
     { i:'🔊', t:'Sonidos y pantalla', s:'Estilo de sonido, volumen y más', go:true, keep:true, f:openSoundMenu },
+    { i:'🎮', t:'Accesorios', s:'Batería de tus mandos', go:true, f:openPadsMenu },
     { i:'⚙️', t:'Repetir configuración', s:'Permisos y carpeta de juegos', f:() => $('setupbtn').click() }
   ], { side:true });
   sfx('ok');
@@ -1234,11 +1240,11 @@ function padFx(brand, name, n, off, v){
   padT = setTimeout(() => { box.innerHTML = ''; fs.innerHTML = ''; }, 4400);
   padSound(brand, false, v);
 }
-function onPadConnect(gp){
+function onPadConnect(gp){ setTimeout(updPads, 600);
   const info = padInfo(gp); lastPad = info; padFx(info.brand, info.name, gp.index + 1, false);
   try { gp.vibrationActuator && gp.vibrationActuator.playEffect('dual-rumble', { startDelay:0, duration:220, weakMagnitude:.6, strongMagnitude:.4 }); } catch(e) {}
 }
-function onPadDisconnect(){ const i = lastPad || { brand:'gen', name:'Mando' }; padFx(i.brand, i.name, 1, true); }
+function onPadDisconnect(){ setTimeout(updPads, 600); const i = lastPad || { brand:'gen', name:'Mando' }; padFx(i.brand, i.name, 1, true); }
 function openPadTest(){
   openPanel('Animaciones de mando', () => Object.keys(PADV).map(k => ({ i:PADV[k].ic, t:PADV[k].label, s:'Conectar: ' + PADV[k].list[padVar[k] - 1][0] + ' · Desconectar: ' + OFFV[padOffVar[k] - 1][0], go:true, keep:true, f:() => openPadBrand(k) })));
 }
@@ -1288,6 +1294,43 @@ function gpUiNav(gp){
   else if (b(0)) mfAct(); else if (b(1)) { if (modalOpen()) closeModal(); else return false; } else return false;
   return true;
 }
+
+
+// ===== Accesorios: batería de los mandos =====
+let padList = [];
+function padNice(d){
+  const v = d.vendor, p = d.product;
+  if (v === 0x054c) return { 0x0ce6:'DualSense', 0x0df2:'DualSense Edge', 0x09cc:'DualShock 4', 0x05c4:'DualShock 4' }[p] || 'PlayStation';
+  if (v === 0x045e) return 'Xbox'; if (v === 0x057e) return 'Nintendo'; return d.name || 'Mando';
+}
+function batHtml(p, ch){
+  if (p < 0) return '<span style="opacity:.6">—</span>';
+  const seg = Math.ceil(p / 25), col = ch ? '#4ade80' : (p <= 15 ? '#f87171' : '#fff');
+  return `<span>${p}%</span><svg viewBox="0 0 34 16" width="2.6em" height="1.2em"><rect x="1" y="1" width="29" height="14" rx="3" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="31" y="5" width="2.4" height="6" rx="1" fill="#fff"/>${[0, 1, 2, 3].map(i => `<rect x="${3 + i * 7}" y="3.2" width="5.2" height="9.6" rx="1" fill="${i < seg ? col : 'rgba(255,255,255,.18)'}"/>`).join('')}</svg>${ch ? '<span>⚡</span>' : ''}`;
+}
+async function updPads(){
+  let L = [];
+  try { if (Launcher) L = (await Launcher.controllers()).list || []; } catch(e) {}
+  if (!L.length) L = getPads().filter(g => g && g.connected).map(g => ({ id:g.index, name:g.id.split('(')[0].trim(), vendor:parseInt((g.id.match(/vendor:\s*([0-9a-f]{4})/i) || [])[1] || '0', 16), product:parseInt((g.id.match(/product:\s*([0-9a-f]{4})/i) || [])[1] || '0', 16), battery:-1, charging:false }));
+  padList = L;
+  const f = L.find(x => x.battery >= 0); $('gpN').textContent = f ? f.battery + '%' : (L.length ? String(L.length) : '1');
+}
+function openPadsMenu(){
+  if (wizOn || introOn) return; pstack = [];
+  const inMenu = () => { const t = pmTop(); return panelOn() && t && t.title === 'Accesorios'; };
+  updPads().then(() => { if (inMenu()) pmRender(); });
+  openPanel('Accesorios', () => {
+    const rows = padList.map((d, i) => ({ i:'🎮', t:'Mando ' + (i + 1) + ' · ' + padNice(d), s: d.battery >= 0 ? (d.charging ? 'Cargando' : 'Batería') : 'Batería no disponible (necesita Android 12 o superior y que el mando la informe)', keep:true, r:batHtml(d.battery, d.charging) }));
+    if (!rows.length) rows.push({ i:'🔌', t:'No hay mandos conectados', s:'Conecta uno por Bluetooth o USB y presiona un botón', keep:true });
+    rows.push({ i:'🎬', t:'Animaciones de mando', s:'Elige cómo se ve al conectar y desconectar', go:true, keep:true, f:openPadTest });
+    return rows;
+  });
+  sfx('ok');
+  const iv = setInterval(() => { if (!inMenu()) { clearInterval(iv); return; } updPads().then(() => { if (inMenu()) pmRender(); }); }, 3000);
+}
+$('gpTop').onclick = openPadsMenu; $('accbtn').onclick = openPadsMenu;
+function togglePadsMenu(){ const t = pmTop(); if (panelOn() && t && t.title === 'Accesorios') { closePanel(); sfx('back'); } else openPadsMenu(); }
+updPads(); setInterval(updPads, 30000);
 
 loadBuf('scroll'); loadBuf('sel'); if (wizOn) holdIntro(); else startIntroAudio();
 render();

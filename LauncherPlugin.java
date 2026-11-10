@@ -217,6 +217,42 @@ public class LauncherPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void controllers(PluginCall call) {
+        JSArray out = new JSArray();
+        for (int id : android.view.InputDevice.getDeviceIds()) {
+            android.view.InputDevice d = android.view.InputDevice.getDevice(id);
+            if (d == null || d.isVirtual()) continue;
+            int src = d.getSources();
+            boolean pad = (src & android.view.InputDevice.SOURCE_GAMEPAD) == android.view.InputDevice.SOURCE_GAMEPAD
+                || (src & android.view.InputDevice.SOURCE_JOYSTICK) == android.view.InputDevice.SOURCE_JOYSTICK;
+            if (!pad) continue;
+            int cap = -1;
+            boolean charging = false;
+            if (Build.VERSION.SDK_INT >= 31) {
+                try {
+                    android.hardware.BatteryState bs = d.getBatteryState();
+                    if (bs != null && bs.isPresent()) {
+                        float c = bs.getCapacity();
+                        if (!Float.isNaN(c)) cap = Math.round(c * 100f);
+                        charging = bs.getStatus() == android.hardware.BatteryState.STATUS_CHARGING;
+                    }
+                } catch (Throwable t) { }
+            }
+            JSObject o = new JSObject();
+            o.put("id", id);
+            o.put("name", d.getName());
+            o.put("vendor", d.getVendorId());
+            o.put("product", d.getProductId());
+            o.put("battery", cap);
+            o.put("charging", charging);
+            out.put(o);
+        }
+        JSObject r = new JSObject();
+        r.put("list", out);
+        call.resolve(r);
+    }
+
+    @PluginMethod
     public void hasAllFiles(PluginCall call) {
         boolean ok = Build.VERSION.SDK_INT < 30 || Environment.isExternalStorageManager();
         JSObject r = new JSObject();
