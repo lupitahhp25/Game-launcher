@@ -249,6 +249,7 @@
   @keyframes pmsout { to{opacity:0;transform:translateX(-12vw)} }
   .avbtn.tap { animation:avtap .65s ease-out; }
   @keyframes avtap { 0%{box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 0 0 rgba(120,160,255,.85)} 100%{box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 0 2.6vh rgba(120,160,255,0)} }
+  #plist { position:relative; overflow-x:hidden; }
 </style>
 </head>
 <body>
@@ -1088,7 +1089,9 @@ function pmRender(){
   $('pttl').textContent = t.title; $('pside').style.display = t.opt.side ? 'flex' : 'none';
   $('plist').innerHTML = t.items.map((it, i) => `<div class="prow ${i === t.f ? 'on' : ''} ${it.danger ? 'dng' : ''} ${pmAnim ? 'rin' : ''}" style="--i:${i}" data-pi="${i}"><span class="pic">${it.i}</span><span class="ptx"><span class="plb">${it.t}</span>${it.s ? `<span class="psub">${it.s}</span>` : ''}</span>${it.r ? `<span class="prt">${it.r}</span>` : ''}${it.go ? '<span class="pch">›</span>' : ''}</div>`).join('');
   pmAnim = '';
-  const on = $('plist').children[t.f]; if (on) on.scrollIntoView({ block:'nearest' });
+  const L = $('plist'), on = L.children[t.f];
+  if (on) { const top = on.offsetTop, bot = top + on.offsetHeight; if (top < L.scrollTop) L.scrollTop = top; else if (bot > L.scrollTop + L.clientHeight) L.scrollTop = bot - L.clientHeight; }
+  L.scrollLeft = 0;
 }
 function pmMove(d){ const t = pmTop(); if (!t || !t.items.length) return; t.f = (t.f + d + t.items.length) % t.items.length; sfx('move'); pmRender(); }
 function pmGo(i){
@@ -1102,6 +1105,7 @@ function closePanel(){
   pmCT = setTimeout(() => { if (pmClosing) { m.classList.add('hidden'); m.classList.remove('flex', 'pm-close', 'pm-open'); pmClosing = false; } }, 240);
 }
 function menuOpenSound(){ if (!uiSound || pack === 'none') return; pv = 1; try { tone(220, 0, .5, .035, 880, 'triangle'); tone(1320, .28, .4, .04); tone(1760, .36, .5, .03); tone(2349, .44, .6, .015); } catch(e) {} }
+$('plist').addEventListener('scroll', () => { if ($('plist').scrollLeft) $('plist').scrollLeft = 0; }, { passive:true });
 $('plist').addEventListener('click', e => { const r = e.target.closest('[data-pi]'); if (r) pmGo(+r.dataset.pi); });
 $('pmenu').addEventListener('click', e => { if (e.target.id === 'pmenu') { closePanel(); sfx('back'); } });
 
