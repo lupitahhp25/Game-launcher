@@ -452,6 +452,7 @@ function openModal(g, kind){ sfx('ok');
       <div class="flex justify-between border-b border-white/10 pb-2"><span class="text-gray-400">Tipo:</span><span class="text-emerald-400 font-bold">${g.type}</span></div>
       <div class="flex justify-between border-b border-white/10 pb-2 gap-3"><span class="text-gray-400">Package:</span><span class="text-blue-300 truncate">${g.pkg}</span></div>
       <div><span class="text-gray-400">ROM:</span><div class="text-yellow-300 text-[11px] break-all bg-white/5 p-1.5 rounded mt-1">${g.rom}</div></div>
+      ${(EMU[g.platform] && EMU[g.platform].saf && g.type !== 'NATIVE') ? `<div><span class="text-gray-400">Dirección que recibe el emulador:</span><div class="text-emerald-300 text-[10px] break-all bg-white/5 p-1.5 rounded mt-1">${safUriJs(g.rom, treeFor(g))}</div></div>` : ''}
     </div>
     <div class="mt-5 flex justify-end gap-3">
       <button onclick="closeModal()" class="px-5 py-2.5 bg-white/10 rounded-xl text-xs font-semibold">Cancelar</button>
@@ -561,7 +562,7 @@ const Launcher = (() => {
   return null;
 })();
 const EMU = {
-  PS2: { activity:'xyz.aethersx2.android.EmulationActivity', action:'android.intent.action.MAIN', extraKey:'bootPath' },
+  PS2: { activity:'xyz.aethersx2.android.EmulationActivity', action:'android.intent.action.MAIN', extraKey:'bootPath', saf:true },
   PSP: { activity:'org.ppsspp.ppsspp.PpssppActivity', action:'android.intent.action.VIEW', data:true },
   GAMECUBE: { activity:'org.dolphinemu.dolphinemu.ui.main.MainActivity', action:'android.intent.action.MAIN', extraKey:'AutoStartFile' },
   PS1: { activity:'com.github.stenzek.duckstation.EmulationActivity', action:'android.intent.action.MAIN', extraKey:'bootPath' },
@@ -577,7 +578,7 @@ async function launchGame(id){
   if (!Launcher) { toast('Esto solo funciona dentro de la app Android'); return; }
   const e = g.type === 'NATIVE' ? {} : (EMU[g.platform] || {});
   try {
-    const r = await Launcher.launch({ package: e.force ? e.package : g.pkg, hint: e.hint, activity: e.activity, action: e.action, extraKey: e.extraKey, path: g.rom, data: e.data ? g.rom : undefined, saf: e.saf || false, tree: g.folder });
+    const r = await Launcher.launch({ package: e.force ? e.package : g.pkg, hint: e.hint, activity: e.activity, action: e.action, extraKey: e.extraKey, path: g.rom, data: e.data ? g.rom : undefined, saf: e.saf || false, tree: treeFor(g) });
     toast(r.fallback && g.type !== 'NATIVE' ? 'Se abrió el emulador; abre el juego desde ahí' : '▶ Iniciando ' + g.title);
   } catch (err) { toast('⚠️ ' + (err.message || err)); }
 }
@@ -1151,7 +1152,8 @@ function openMainMenu(){
     { i:'📱', t:'Agregar juegos de Android', s:'Apps y juegos instalados', go:true, f:() => $('appsbtn').click() },
     { i:'🔄', t:'Re-escanear mi carpeta', s:wizRoot || 'Aún no elegiste carpeta', f:() => $('rescanbtn').click() },
     { i:'🔍', t:'Buscar en la biblioteca', f:() => $('srch').click() },
-        { i:'🔊', t:'Sonidos y pantalla', s:'Estilo de sonido, volumen y más', go:true, keep:true, f:openSoundMenu },
+        { i:'🕹️', t:'Emuladores', s:'Carpeta que agregaste en NetherSX2 o Eden', go:true, keep:true, f:openEmuMenu },
+    { i:'🔊', t:'Sonidos y pantalla', s:'Estilo de sonido, volumen y más', go:true, keep:true, f:openSoundMenu },
     { i:'🎮', t:'Accesorios', s:'Batería de tus mandos', go:true, f:openPadsMenu },
     { i:'⚙️', t:'Repetir configuración', s:'Permisos y carpeta de juegos', f:() => $('setupbtn').click() }
   ], { side:true });
@@ -1393,6 +1395,28 @@ $('avatar').onclick = () => { const a = $('avatar'); a.classList.remove('tap'); 
 $('gpTop').onclick = openPadsMenu; $('accbtn').onclick = openPadsMenu;
 function togglePadsMenu(){ const t = pmTop(); if (panelOn() && t && t.title === 'Accesorios') { closePanel(); sfx('back'); } else openPadsMenu(); }
 updPads(); setInterval(updPads, 30000);
+
+
+// ===== Rutas para emuladores que usan carpetas autorizadas (NetherSX2, Eden) =====
+let trees = {};
+try { trees = JSON.parse(LS.getItem('gl_trees') || '{}'); } catch(e) {}
+const treeFor = g => trees[g.platform] || g.folder;
+function splitVolJs(p){
+  if (!p) return null; const b = '/storage/emulated/0/';
+  if (p.startsWith(b)) return ['primary', p.slice(b.length)];
+  const m = p.match(/^\/storage\/([^\/]+)\/(.*)$/); return (m && m[1] !== 'emulated' && m[1] !== 'self') ? [m[1], m[2]] : null;
+}
+function safUriJs(path, tree){
+  const p = splitVolJs(path); if (!p) return path;
+  const auth = 'content://com.android.externalstorage.documents/', t = splitVolJs(tree), enc = encodeURIComponent;
+  if (t && t[0] === p[0]) { const tr = t[1].replace(/\/+$/, ''); if (p[1].startsWith(tr + '/')) return auth + 'tree/' + enc(p[0] + ':' + tr) + '/document/' + enc(p[0] + ':' + p[1]); }
+  return auth + 'document/' + enc(p[0] + ':' + p[1]);
+}
+function openEmuMenu(){
+  openPanel('Emuladores · carpeta registrada', () => ['PS2', 'SWITCH'].map(k => ({ i:'📂', t:PLATFORMS[k].name, s: trees[k] ? trees[k] : 'Automática (la carpeta de cada juego)', go:true, keep:true,
+    f: async () => { try { const r = await Launcher.pickFolder(); if (r && r.path) { trees[k] = r.path; LS.setItem('gl_trees', JSON.stringify(trees)); toast('✅ Carpeta guardada para ' + PLATFORMS[k].code); pmRender(); } } catch(e) { if (e.message !== 'Cancelado') toast('⚠️ ' + (e.message || e)); } } }))
+    .concat([{ i:'♻️', t:'Volver a automático', s:'Usar la carpeta donde está cada juego', keep:true, f:() => { trees = {}; LS.setItem('gl_trees', '{}'); toast('Listo: modo automático'); } }]));
+}
 
 loadBuf('scroll'); loadBuf('sel'); if (wizOn) holdIntro(); else startIntroAudio();
 render();

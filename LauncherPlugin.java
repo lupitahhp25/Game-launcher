@@ -24,17 +24,28 @@ import java.util.Set;
 @CapacitorPlugin(name = "Launcher")
 public class LauncherPlugin extends Plugin {
 
+    private String[] splitVol(String path) {
+        if (path == null) return null;
+        String b = "/storage/emulated/0/";
+        if (path.startsWith(b)) return new String[] { "primary", path.substring(b.length()) };
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("^/storage/([^/]+)/(.*)$").matcher(path);
+        if (m.matches() && !m.group(1).equals("emulated") && !m.group(1).equals("self")) return new String[] { m.group(1), m.group(2) };
+        return null;
+    }
+
     private String safUri(String path, String tree) {
-        String base = "/storage/emulated/0/";
-        if (path == null || !path.startsWith(base)) return null;
-        String rel = path.substring(base.length());
+        String[] p = splitVol(path);
+        if (p == null) return null;
         String auth = "content://com.android.externalstorage.documents/";
-        if (tree != null && tree.startsWith(base) && path.startsWith(tree)) {
-            String t = tree.substring(base.length());
-            while (t.endsWith("/")) t = t.substring(0, t.length() - 1);
-            return auth + "tree/primary%3A" + Uri.encode(t) + "/document/primary%3A" + Uri.encode(rel);
+        String[] t = splitVol(tree);
+        if (t != null && t[0].equals(p[0])) {
+            String tr = t[1];
+            while (tr.endsWith("/")) tr = tr.substring(0, tr.length() - 1);
+            if (p[1].startsWith(tr + "/")) {
+                return auth + "tree/" + Uri.encode(p[0] + ":" + tr) + "/document/" + Uri.encode(p[0] + ":" + p[1]);
+            }
         }
-        return auth + "document/primary%3A" + Uri.encode(rel);
+        return auth + "document/" + Uri.encode(p[0] + ":" + p[1]);
     }
 
     private String findByHint(String hint) {
@@ -77,13 +88,17 @@ public class LauncherPlugin extends Plugin {
             if (activity != null) i.setComponent(new ComponentName(pkg, activity));
             else i.setPackage(pkg);
             boolean content = false;
+            String extraVal = path;
             if (saf) {
                 String u = safUri(path, tree);
-                if (u != null) { i.setData(Uri.parse(u)); content = true; }
+                if (u != null) {
+                    if (extraKey != null) extraVal = u;
+                    else { i.setData(Uri.parse(u)); content = true; }
+                }
             } else if (data != null) {
                 i.setData(Uri.parse(data));
             }
-            if (extraKey != null && path != null) i.putExtra(extraKey, path);
+            if (extraKey != null && extraVal != null) i.putExtra(extraKey, extraVal);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             if (!content) i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             getContext().startActivity(i);
