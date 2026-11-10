@@ -32,6 +32,25 @@ jobs:
             sed -i 's|https://cdn.tailwindcss.com/3.4.17|tailwind.js|' www/index.html
           fi
 
+      - name: Insertar claves de ScreenScraper desde los secretos (si existen)
+        env:
+          SS_DEVID: ${{ secrets.SS_DEVID }}
+          SS_DEVPASS: ${{ secrets.SS_DEVPASS }}
+        run: |
+          python3 - <<'PY'
+          import os
+          esc = lambda v: v.replace('\\', '\\\\').replace("'", "\\'").replace('\n', '').replace('\r', '')
+          i, p = os.environ.get('SS_DEVID', '').strip(), os.environ.get('SS_DEVPASS', '').strip()
+          if i and p:
+              f = 'www/index.html'
+              s = open(f, encoding='utf-8').read()
+              s = s.replace('__SS_DEVID__', esc(i)).replace('__SS_DEVPASS__', esc(p))
+              open(f, 'w', encoding='utf-8').write(s)
+              print('Claves de ScreenScraper insertadas')
+          else:
+              print('Sin claves de ScreenScraper: se pediran dentro de la app')
+          PY
+
       - name: Instalar Capacitor y crear proyecto Android
         run: |
           npm install
