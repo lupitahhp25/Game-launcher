@@ -224,6 +224,31 @@
   @keyframes chkin { from{opacity:0;transform:scale(.2)} to{opacity:1;transform:scale(1)} }
   .prt { flex-shrink:0; display:flex; align-items:center; gap:.6em; font-size:clamp(.75rem,2.8vh,1.1rem); font-weight:600; }
   #gpTop { cursor:pointer; pointer-events:auto; }
+  #sstop, #srch, #menubtn { display:none !important; }
+  .avbtn { width:clamp(30px,7.4vh,42px); height:clamp(30px,7.4vh,42px); }
+  .ppanel { position:relative; overflow:hidden; }
+  .ppanel::after { content:""; position:absolute; top:-10%; bottom:-10%; left:-45%; width:28%; background:linear-gradient(100deg,transparent,rgba(255,255,255,.3),transparent); transform:skewX(-18deg); opacity:0; pointer-events:none; }
+  #pmenu.pm-open { animation:pmbg .5s ease-out both; }
+  @keyframes pmbg { from{background-color:rgba(6,9,14,0);backdrop-filter:blur(0)} to{background-color:rgba(6,9,14,.6);backdrop-filter:blur(12px)} }
+  #pmenu.pm-open .ppanel { transform-origin:88% 0; animation:pmpanel .65s cubic-bezier(.2,1.25,.35,1) both; }
+  @keyframes pmpanel { from{opacity:0;transform:translate(16vw,-20vh) scale(.5)} to{opacity:1;transform:none} }
+  #pmenu.pm-open .ppanel::after { animation:pmshine 1s .5s ease-out both; }
+  @keyframes pmshine { 0%{left:-45%;opacity:1} 80%{opacity:1} 100%{left:125%;opacity:0} }
+  #pmenu.pm-open .pside { animation:pmside .55s .14s cubic-bezier(.2,1.2,.3,1) both; }
+  @keyframes pmside { from{opacity:0;transform:translateX(-24vw)} to{opacity:1;transform:none} }
+  #pmenu.pm-open .pbtn { animation:pbpop .45s calc(.34s + var(--j,0) * 90ms) cubic-bezier(.34,1.8,.64,1) both; }
+  @keyframes pbpop { from{opacity:0;transform:scale(0) rotate(-90deg)} to{opacity:1;transform:none} }
+  .prow.rin { animation:prin .4s calc(var(--i,0) * 40ms) ease-out both; }
+  #pmenu.pm-open .prow.rin { animation-delay:calc(.24s + var(--i,0) * 55ms); }
+  @keyframes prin { from{opacity:0;transform:translateX(5vh)} to{opacity:1;transform:none} }
+  #pmenu.pm-close { animation:pmout .24s ease-in both; }
+  @keyframes pmout { to{opacity:0} }
+  #pmenu.pm-close .ppanel { animation:pmpout .24s ease-in both; transform-origin:88% 0; }
+  @keyframes pmpout { to{opacity:0;transform:translate(8vw,-10vh) scale(.8)} }
+  #pmenu.pm-close .pside { animation:pmsout .24s ease-in both; }
+  @keyframes pmsout { to{opacity:0;transform:translateX(-12vw)} }
+  .avbtn.tap { animation:avtap .65s ease-out; }
+  @keyframes avtap { 0%{box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 0 0 rgba(120,160,255,.85)} 100%{box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 0 2.6vh rgba(120,160,255,0)} }
 </style>
 </head>
 <body>
@@ -1047,22 +1072,36 @@ const PACKS = {
 
 // ===== Menú tipo iiSU: panel grande con filas =====
 let pstack = [];
-const panelOn = () => !$('pmenu').classList.contains('hidden');
+let pmClosing = false, pmAnim = '', pmT = 0, pmCT = 0;
+const panelOn = () => !$('pmenu').classList.contains('hidden') && !pmClosing;
 const pmTop = () => pstack[pstack.length - 1];
-function openPanel(title, build, opt){ pstack.push({ title, build, opt: opt || {}, f: 0, items: [] }); const m = $('pmenu'); m.classList.remove('hidden'); m.classList.add('flex'); pmRender(); }
+function openPanel(title, build, opt){
+  const m = $('pmenu'), fresh = m.classList.contains('hidden') || pmClosing;
+  pmClosing = false; m.classList.remove('pm-close');
+  pstack.push({ title, build, opt: opt || {}, f: 0, items: [] });
+  m.classList.remove('hidden'); m.classList.add('flex'); pmAnim = fresh ? 'open' : 'sub';
+  if (fresh) { m.classList.remove('pm-open'); void m.offsetWidth; m.classList.add('pm-open'); clearTimeout(pmT); pmT = setTimeout(() => m.classList.remove('pm-open'), 1700); }
+  pmRender();
+}
 function pmRender(){
   const t = pmTop(); if (!t) return; t.items = t.build(); if (t.f >= t.items.length) t.f = 0;
   $('pttl').textContent = t.title; $('pside').style.display = t.opt.side ? 'flex' : 'none';
-  $('plist').innerHTML = t.items.map((it, i) => `<div class="prow ${i === t.f ? 'on' : ''} ${it.danger ? 'dng' : ''}" data-pi="${i}"><span class="pic">${it.i}</span><span class="ptx"><span class="plb">${it.t}</span>${it.s ? `<span class="psub">${it.s}</span>` : ''}</span>${it.r ? `<span class="prt">${it.r}</span>` : ''}${it.go ? '<span class="pch">›</span>' : ''}</div>`).join('');
+  $('plist').innerHTML = t.items.map((it, i) => `<div class="prow ${i === t.f ? 'on' : ''} ${it.danger ? 'dng' : ''} ${pmAnim ? 'rin' : ''}" style="--i:${i}" data-pi="${i}"><span class="pic">${it.i}</span><span class="ptx"><span class="plb">${it.t}</span>${it.s ? `<span class="psub">${it.s}</span>` : ''}</span>${it.r ? `<span class="prt">${it.r}</span>` : ''}${it.go ? '<span class="pch">›</span>' : ''}</div>`).join('');
+  pmAnim = '';
   const on = $('plist').children[t.f]; if (on) on.scrollIntoView({ block:'nearest' });
 }
 function pmMove(d){ const t = pmTop(); if (!t || !t.items.length) return; t.f = (t.f + d + t.items.length) % t.items.length; sfx('move'); pmRender(); }
 function pmGo(i){
   const t = pmTop(); if (!t) return; if (i != null) t.f = i; const it = t.items[t.f]; if (!it) return;
-  sfx('ok'); if (!it.keep) closePanel(); if (it.f) it.f(); if (it.keep && panelOn()) pmRender();
+  sfx('ok'); if (!it.keep) closePanel(); if (it.f) it.f(); if (it.keep && panelOn() && pmTop() === t) pmRender();
 }
-function pmBack(){ pstack.pop(); sfx('back'); if (pstack.length) pmRender(); else closePanel(); }
-function closePanel(){ pstack = []; const m = $('pmenu'); m.classList.add('hidden'); m.classList.remove('flex'); }
+function pmBack(){ pstack.pop(); sfx('back'); if (pstack.length) { pmAnim = 'sub'; pmRender(); } else closePanel(); }
+function closePanel(){
+  pstack = []; const m = $('pmenu'); if (m.classList.contains('hidden') || pmClosing) return;
+  pmClosing = true; m.classList.add('pm-close'); clearTimeout(pmCT);
+  pmCT = setTimeout(() => { if (pmClosing) { m.classList.add('hidden'); m.classList.remove('flex', 'pm-close', 'pm-open'); pmClosing = false; } }, 240);
+}
+function menuOpenSound(){ if (!uiSound || pack === 'none') return; pv = 1; try { tone(220, 0, .5, .035, 880, 'triangle'); tone(1320, .28, .4, .04); tone(1760, .36, .5, .03); tone(2349, .44, .6, .015); } catch(e) {} }
 $('plist').addEventListener('click', e => { const r = e.target.closest('[data-pi]'); if (r) pmGo(+r.dataset.pi); });
 $('pmenu').addEventListener('click', e => { if (e.target.id === 'pmenu') { closePanel(); sfx('back'); } });
 
@@ -1084,17 +1123,17 @@ function openMainMenu(){
   pstack = [];
   $('ps2').innerHTML = wifiSvg(lastSt ? (lastSt.net === 'wifi' ? lastSt.wifiLevel : 0) : 3, lastSt && lastSt.net === 'none');
   openPanel('Menú principal', () => [
+    { i:'👤', t:profile.name, s:'Cambia tu foto y tu nombre', go:true, f:() => $('profbtn').click() },
     { i:'📁', t:'Escanear ROMs', s:'Elige una carpeta de juegos', go:true, f:() => $('scanbtn').click() },
     { i:'🖼️', t:'Carátulas y datos', s:'Descarga portadas, fondos y videos', go:true, f:() => $('ssbtn').click() },
     { i:'📱', t:'Agregar juegos de Android', s:'Apps y juegos instalados', go:true, f:() => $('appsbtn').click() },
     { i:'🔄', t:'Re-escanear mi carpeta', s:wizRoot || 'Aún no elegiste carpeta', f:() => $('rescanbtn').click() },
     { i:'🔍', t:'Buscar en la biblioteca', f:() => $('srch').click() },
-    { i:'👤', t:'Perfil y foto', s:profile.name, go:true, f:() => $('profbtn').click() },
-    { i:'🔊', t:'Sonidos y pantalla', s:'Estilo de sonido, volumen y más', go:true, keep:true, f:openSoundMenu },
+        { i:'🔊', t:'Sonidos y pantalla', s:'Estilo de sonido, volumen y más', go:true, keep:true, f:openSoundMenu },
     { i:'🎮', t:'Accesorios', s:'Batería de tus mandos', go:true, f:openPadsMenu },
     { i:'⚙️', t:'Repetir configuración', s:'Permisos y carpeta de juegos', f:() => $('setupbtn').click() }
   ], { side:true });
-  sfx('ok');
+  menuOpenSound();
 }
 function openGameMenu(){
   if (wizOn || introOn) return;
@@ -1328,6 +1367,7 @@ function openPadsMenu(){
   sfx('ok');
   const iv = setInterval(() => { if (!inMenu()) { clearInterval(iv); return; } updPads().then(() => { if (inMenu()) pmRender(); }); }, 3000);
 }
+$('avatar').onclick = () => { const a = $('avatar'); a.classList.remove('tap'); void a.offsetWidth; a.classList.add('tap'); openMainMenu(); }; ['ps1', 'ps2', 'ps3'].forEach((id, i) => $(id).style.setProperty('--j', i)); $('avatar').title = 'Perfil y menú';
 $('gpTop').onclick = openPadsMenu; $('accbtn').onclick = openPadsMenu;
 function togglePadsMenu(){ const t = pmTop(); if (panelOn() && t && t.title === 'Accesorios') { closePanel(); sfx('back'); } else openPadsMenu(); }
 updPads(); setInterval(updPads, 30000);
