@@ -631,7 +631,10 @@ let missVid = 0;
 const MODE_LABEL = { shot:'Captura', cover:'Portada', video:'Video' };
 const bgMode = g => g.bgMode || (g.vid ? 'video' : 'shot');
 let scraping = false, scrapeCancel = false, scrapeDone = 0, scrapeTotal = 0;
-const hasSS = () => cred.user && cred.pass && cred.devid && cred.devpass;
+const SS_DEV = { id:'__SS_DEVID__', pass:'__SS_DEVPASS__' };
+const ssBuilt = !SS_DEV.id.startsWith('__') && !SS_DEV.pass.startsWith('__') && SS_DEV.id !== '' && SS_DEV.pass !== '';
+const devId = () => ssBuilt ? SS_DEV.id : cred.devid, devPass = () => ssBuilt ? SS_DEV.pass : cred.devpass;
+const hasSS = () => cred.user && cred.pass && devId() && devPass();
 const probe = url => new Promise(res => { const i = new Image(); const t = setTimeout(() => { i.src = ''; res(false); }, 8000); i.onload = () => { clearTimeout(t); res(true); }; i.onerror = () => { clearTimeout(t); res(false); }; i.src = url; });
 const pickMedia = (m, type) => {
   const L = (m || []).filter(x => x.type === type); if (!L.length) return null;
@@ -639,7 +642,7 @@ const pickMedia = (m, type) => {
   return L[0].url;
 };
 async function ssLookup(g){
-  const q = new URLSearchParams({ devid:cred.devid, devpassword:cred.devpass, softname:'PS5Launcher', output:'json', ssid:cred.user, sspassword:cred.pass, systemeid:SSYS[g.platform], romtype:'rom', romnom:(g.rom || '').split('/').pop() });
+  const q = new URLSearchParams({ devid:devId(), devpassword:devPass(), softname:'PS5Launcher', output:'json', ssid:cred.user, sspassword:cred.pass, systemeid:SSYS[g.platform], romtype:'rom', romnom:(g.rom || '').split('/').pop() });
   const r = await fetch('https://api.screenscraper.fr/api2/jeuInfos.php?' + q);
   const t = await r.text();
   let j; try { j = JSON.parse(t); } catch(e) { throw new Error(t.replace(/<[^>]+>/g,'').trim().slice(0,90) || 'Respuesta inválida'); }
@@ -706,8 +709,21 @@ async function runScrape(items){
   finally { scraping = false; save(); render(); }
   say((scrapeCancel ? 'Detenido. ' : '') + ok + ' de ' + scrapeDone + ' juegos actualizados' + (scrapeDone - ok > 0 ? ' (' + (scrapeDone - ok) + ' sin coincidencia en la base de carátulas)' : '') + '.'
     + (missVid ? ' ' + missVid + ' sin video (se usó la captura).' : '')
-    + ((cred.user || cred.pass) && !slow ? ' Para usar ScreenScraper faltan el Dev ID y el Dev Password; se usaron las carátulas gratuitas.' : '')
+    + (!slow && (cred.user || cred.pass) ? (ssBuilt ? ' Falta tu usuario o contraseña de ScreenScraper; se usaron las carátulas gratuitas.' : ' Para usar ScreenScraper faltan el Dev ID y el Dev Password; se usaron las carátulas gratuitas.') : '')
     + (lastErr ? ' ScreenScraper dijo: ' + lastErr : ''));
+}
+async function ssTest(){
+  readSS(); const out = $('ssr');
+  if (!cred.user || !cred.pass) { out.textContent = 'Escribe tu usuario y contraseña de ScreenScraper.'; return; }
+  if (!devId() || !devPass()) { out.textContent = 'Faltan las claves de desarrollador (Dev ID y Dev Password).'; return; }
+  out.textContent = 'Probando conexión…';
+  try {
+    const q = new URLSearchParams({ devid:devId(), devpassword:devPass(), softname:'PS5Launcher', output:'json', ssid:cred.user, sspassword:cred.pass });
+    const r = await fetch('https://api.screenscraper.fr/api2/ssuserInfos.php?' + q), t = await r.text(); let j;
+    try { j = JSON.parse(t); } catch(e) { out.textContent = '⚠️ ' + (t.replace(/<[^>]+>/g, '').trim().slice(0, 120) || 'Respuesta inválida'); return; }
+    const u = j.response && j.response.ssuser;
+    out.textContent = u ? '✅ Cuenta correcta' + (u.maxthreads ? ' · descargas simultáneas permitidas: ' + u.maxthreads : '') : '⚠️ No se pudo confirmar la cuenta.';
+  } catch(e) { out.textContent = '⚠️ Sin conexión con ScreenScraper: ' + (e.message || e); }
 }
 function openSS(){
   const m = $('modal'); m.classList.remove('hidden'); m.classList.add('flex'); m.style.alignItems = '';
@@ -715,10 +731,10 @@ function openSS(){
   const ck = (id, label, on) => `<label class="flex items-center gap-2 text-xs"><input id="${id}" type="checkbox" ${on?'checked':''} class="w-4 h-4 accent-blue-500">${label}</label>`;
   m.innerHTML = `<div class="w-full max-w-lg p-5 max-h-full overflow-y-auto no-scrollbar">
     <h3 class="text-lg font-semibold mb-1">🗄️ Carátulas y datos</h3>
-    <p class="text-[11px] text-white/60 mb-3">Sin cuenta se usan las carátulas gratuitas de Libretro. Con tu cuenta y claves de ScreenScraper se descarga más (sinopsis, video).</p>
+    <p class="text-[11px] text-white/60 mb-3">${ssBuilt ? 'Inicia sesión con tu cuenta gratuita de ScreenScraper (screenscraper.fr) para descargar más portadas, sinopsis y videos. Es tu <b>nombre de usuario</b>, no el correo. Sin cuenta se usan las carátulas gratuitas de Libretro.' : 'Sin cuenta se usan las carátulas gratuitas de Libretro. Con tu cuenta y las claves de ScreenScraper se descarga más (sinopsis, video).'}</p>
     <div class="grid grid-cols-2 gap-2 mb-3">
       ${inp('ssu','Usuario ScreenScraper',cred.user)}${inp('ssp','Contraseña',cred.pass,'password')}
-      ${inp('ssd','Dev ID',cred.devid)}${inp('ssdp','Dev Password',cred.devpass,'password')}
+      ${ssBuilt ? '' : inp('ssd','Dev ID',cred.devid) + inp('ssdp','Dev Password',cred.devpass,'password')}
     </div>
     <div class="grid grid-cols-2 gap-2 mb-3">${ck('ck_c','Carátulas',sopt.covers)}${ck('ck_f','Fondo (captura)',sopt.fondo)}${ck('ck_s','Sinopsis',sopt.sinopsis)}${ck('ck_v','Video (pesado)',sopt.video)}</div>
     <p class="text-[11px] text-white/60 mb-1">Qué se ve de fondo en cada juego:</p>
@@ -727,6 +743,7 @@ function openSS(){
     <p id="ssr" class="text-xs text-white/80 mb-3 min-h-[1rem]">${scraping ? 'Scrapeando… (' + scrapeDone + '/' + scrapeTotal + ')' : 'Listo.'}</p>
     <div class="flex flex-wrap justify-end gap-2">
       <button onclick="readSS();closeModal()" class="px-4 py-2 bg-white/10 rounded-full text-xs">Cerrar</button>
+      <button id="sstest" class="px-4 py-2 bg-white/10 rounded-full text-xs">Probar cuenta</button>
       <button id="ssstop" class="px-4 py-2 bg-white/10 rounded-full text-xs">Detener</button>
       <button id="ssgo" class="px-4 py-2 bg-white/20 rounded-full text-xs font-semibold">Este juego</button>
       <button id="ssall" class="px-5 py-2 bg-white text-black rounded-full text-xs font-semibold">Toda la biblioteca</button>
@@ -734,6 +751,7 @@ function openSS(){
   $('bgsel').onclick = e => { const b = e.target.closest('[data-bgv]'); if (!b) return; $('bgsel').dataset.v = b.dataset.bgv; $('bgsel').querySelectorAll('button').forEach(x => { x.className = 'px-3 py-1.5 rounded-full text-xs ' + (x === b ? 'bg-white text-black font-semibold' : 'bg-white/10'); }); };
   $('ssgo').onclick = () => { const g = list()[idx]; if (g) runScrape([g]); };
   $('ssall').onclick = () => runScrape(games.slice());
+  $('sstest').onclick = ssTest;
   $('ssstop').onclick = () => { scrapeCancel = true; say('Deteniendo…'); };
 }
 
