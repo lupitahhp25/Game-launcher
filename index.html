@@ -173,6 +173,55 @@
   .trk { width:34vw; height:.8vh; border-radius:9999px; background:rgba(255,255,255,.2); overflow:hidden; }
   .trk i { display:block; height:100%; background:#fff; width:0; animation:trf 1.6s .3s ease-out forwards; }
   @keyframes trf { to{width:100%} }
+  #intro.hold, #intro.hold *, #intro.hold *::before, #intro.hold *::after { animation-play-state:paused !important; }
+  .pfx.unp { animation:unp 2.8s both; }
+  @keyframes unp { 0%{transform:translateY(-170%);opacity:0} 12%{transform:none;opacity:1} 30%{transform:translateX(-1vh) rotate(-3deg)} 38%{transform:translateX(1vh) rotate(3deg)} 46%{transform:translateX(-.6vh)} 54%{transform:none} 78%{transform:none;opacity:1} 100%{transform:translateX(60vw) rotate(10deg);opacity:0} }
+  .fx.off { filter:saturate(.35); animation-duration:3.2s; }
+  .beam { position:absolute; left:50%; top:0; width:16vh; margin-left:-8vh; height:50%; background:linear-gradient(to bottom,transparent,rgba(120,160,255,.6)); clip-path:polygon(42% 0,58% 0,100% 100%,0 100%); transform-origin:top; opacity:0; animation:bm 1.4s ease-out both; }
+  @keyframes bm { 0%{opacity:0;transform:scaleY(0)} 40%{opacity:1;transform:scaleY(1)} 100%{opacity:0;transform:scaleY(1)} }
+  .pt { position:absolute; left:50%; top:50%; width:1.1vh; height:1.1vh; margin:-.55vh; border-radius:50%; background:var(--k); opacity:0; animation:ptb 1.4s .5s ease-out both; }
+  @keyframes ptb { 0%{opacity:1;transform:rotate(var(--a)) translateY(0) scale(.5)} 100%{opacity:0;transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(1.2)} }
+  .pt.fall { animation:ptf 1.8s var(--d) ease-in both; }
+  @keyframes ptf { 0%{opacity:1;transform:translate(0,0)} 100%{opacity:0;transform:translate(var(--dx),28vh)} }
+  .mq { position:absolute; left:0; right:0; top:30%; overflow:hidden; white-space:nowrap; }
+  .mq .tr { display:inline-block; font-size:6vh; font-weight:800; letter-spacing:3vh; animation:mqs 3.8s linear both; }
+  @keyframes mqs { from{transform:translateX(-45%)} to{transform:translateX(0)} }
+  .orb.beat { animation:beat 1.4s both; }
+  @keyframes beat { 0%{transform:scale(0)} 20%{transform:scale(1.15)} 30%{transform:scale(.95)} 45%{transform:scale(1.22)} 62%,100%{transform:scale(1)} }
+  .sph { position:absolute; inset:-1.6vh; border-radius:50%; background:radial-gradient(circle at 35% 30%,#e2ffe2,#4fd14f 38%,#0b5a0b 78%); box-shadow:0 0 6vh #5fd35f; animation:orbp .7s cubic-bezier(.34,1.8,.64,1) both; }
+  .cur { position:absolute; inset:0; background:linear-gradient(90deg,#0b5a0b,#3fbf3f); transform:translateX(-101%); animation:curw 1.7s ease-in-out both; }
+  @keyframes curw { 0%{transform:translateX(-101%)} 45%{transform:none} 100%{transform:translateX(101%)} }
+  .st { position:absolute; left:var(--x); top:var(--y); font-style:normal; color:var(--k); font-size:3.4vh; opacity:0; animation:stw 1.6s var(--d) ease-in-out 2 both; }
+  @keyframes stw { 0%{opacity:0;transform:scale(.2) rotate(0)} 50%{opacity:1;transform:scale(1.2) rotate(90deg)} 100%{opacity:0;transform:scale(.3) rotate(180deg)} }
+  .pd { position:absolute; top:50%; width:1.4vh; height:12vh; margin-top:-6vh; border-radius:1vh; }
+  .pd.l { left:6vw; background:#ff3b4a; } .pd.r { right:6vw; background:#27b4f5; }
+  .ball { position:absolute; width:2.2vh; height:2.2vh; border-radius:50%; background:#fff; box-shadow:0 0 2vh #fff; animation:pong 2.4s linear both; }
+  @keyframes pong { 0%{left:8vw;top:40%} 25%{left:90vw;top:62%} 50%{left:8vw;top:44%} 75%{left:90vw;top:56%} 100%{left:50%;top:50%;opacity:0} }
+  .ob.pers { perspective:60vh; }
+  .orb.coin { animation:coin 1.7s ease-out both; }
+  @keyframes coin { 0%{transform:translateY(34vh) rotateY(0)} 50%{transform:translateY(-8vh) rotateY(900deg)} 100%{transform:translateY(0) rotateY(1440deg)} }
+  .flashw { position:absolute; inset:0; background:radial-gradient(circle,rgba(255,255,255,.55),transparent 60%); opacity:0; animation:fl 1.2s ease-out both; }
+  .rg.in { animation:rgi 1.6s var(--d) ease-in both; }
+  @keyframes rgi { 0%{transform:scale(5);opacity:0} 30%{opacity:.8} 100%{transform:scale(.6);opacity:0} }
+  .orb.out { animation:orbp .5s cubic-bezier(.34,1.8,.64,1) both, orbx .6s 1.5s ease-in forwards; }
+  @keyframes orbx { to{transform:scale(0);opacity:0} }
+  .orb.dim { animation:orbp .4s both, orbdim 1.6s .4s forwards; }
+  @keyframes orbdim { 0%{opacity:1} 30%{opacity:.4} 45%{opacity:1} 60%{opacity:.3} 100%{opacity:0;filter:grayscale(1)} }
+  .crt { position:absolute; left:0; right:0; top:50%; height:.5vh; background:#fff; box-shadow:0 0 3vh #fff; animation:crtk 1.1s ease-in both; }
+  @keyframes crtk { 0%{transform:scaleY(80);opacity:.3} 40%{transform:scaleY(1);opacity:1} 80%{transform:scaleX(.02);opacity:1} 100%{transform:scale(0);opacity:0} }
+  .gl { text-align:center; animation:fxin .3s both; }
+  .gl b { display:block; font-size:4vh; text-shadow:.35vh 0 #f0f,-.35vh 0 #0ff; animation:glj .35s steps(2) 7; }
+  .gl span { font-size:2vh; color:rgba(255,255,255,.7); }
+  @keyframes glj { 0%,100%{transform:translate(0)} 20%{transform:translate(-.8vh,.2vh) skewX(10deg)} 40%{transform:translate(.9vh,-.3vh) skewX(-8deg)} 60%{transform:translate(-.4vh,.4vh)} 80%{transform:translate(.6vh,0) skewX(6deg)} }
+  .card { position:relative; display:flex; align-items:center; gap:2vh; padding:2.6vh 4.6vh 2.6vh 2.6vh; border-radius:2vh; background:rgba(14,18,26,.86); border:1px solid rgba(255,255,255,.2); overflow:hidden; animation:fxin .5s both; }
+  .card .lbl { animation:none; opacity:1; text-align:left; }
+  .scan { position:absolute; top:0; bottom:0; left:0; width:.6vh; background:linear-gradient(to bottom,transparent,#fff,transparent); box-shadow:0 0 2vh #fff; animation:scn 1.6s .2s ease-in-out both; }
+  @keyframes scn { 0%{transform:translateX(0);opacity:0} 20%{opacity:1} 100%{transform:translateX(52vh);opacity:0} }
+  .dots { display:flex; justify-content:center; animation:dfade .1s 1.8s forwards; }
+  .dots i { width:1.6vh; height:1.6vh; border-radius:50%; background:#fff; margin:0 .6vh; animation:dotb .6s var(--d) ease-in-out 3; }
+  @keyframes dotb { 50%{transform:translateY(-1.6vh)} } @keyframes dfade { to{opacity:0;height:0} }
+  .chk { font-size:5vh; opacity:0; animation:chkin .5s 1.9s both; text-align:center; }
+  @keyframes chkin { from{opacity:0;transform:scale(.2)} to{opacity:1;transform:scale(1)} }
 </style>
 </head>
 <body>
@@ -659,7 +708,7 @@ function openSS(){
 
 
 // ===== Intro estilo consola: presiona START =====
-let introOn = true, introStage = 0, introRaf = 0, introT0 = performance.now(), introAudio = null;
+let introOn = true, introStage = 0, introRaf = 0, introT0 = performance.now(), introAudio = null, introHeld = false;
 const icv = $('i-cv'), ictx = icv.getContext('2d');
 const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -668,7 +717,7 @@ const dust = Array.from({ length:170 }, () => ({ x:rnd(.3, 1), y:rnd(.5, .88), r
 const bokeh = Array.from({ length:14 }, () => ({ x:rnd(.1, .95), y:rnd(.45, .9), r:rnd(2.5, 7), a:rnd(0, 6.28), s:rnd(.3, .9), vx:rnd(.00003, .0001) }));
 function sizeIntro(){ const d = devicePixelRatio || 1; icv.width = innerWidth * d; icv.height = innerHeight * d; ictx.setTransform(d, 0, 0, d, 0, 0); }
 function drawParticles(now){
-  const T = (now - introT0) / 1000, W = innerWidth, H = innerHeight;
+  const T = introHeld ? 0 : (now - introT0) / 1000, W = innerWidth, H = innerHeight;
   ictx.clearRect(0, 0, W, H); ictx.shadowBlur = 0;
   const pre = sm(3.4, 4.4, T) * (1 - sm(4.6, 5.0, T)) * .6, main = sm(4.6, 5.6, T) * (1 - .55 * sm(6.5, 9, T));
   const sA = Math.max(pre, main), dA = sm(5.8, 9, T), bA = sm(5.0, 6.5, T);
@@ -690,6 +739,8 @@ function startIntroAudio(){
     if (p && p.catch) p.catch(() => { const un = () => { if (introOn && !introStage && introAudio) introAudio.play().catch(() => {}); }; ['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, un, { once:true })); });
   } catch(e) {}
 }
+function holdIntro(){ introHeld = true; $('intro').classList.add('hold'); }
+function releaseIntro(){ if (!introHeld) return; introHeld = false; $('intro').classList.remove('hold'); introT0 = performance.now(); startIntroAudio(); }
 function stopIntroAudio(){
   const a = introAudio; if (!a) return; let v = a.volume;
   const iv = setInterval(() => { v -= .1; if (v <= 0) { clearInterval(iv); a.pause(); } else a.volume = v; }, 60);
@@ -835,7 +886,7 @@ async function openAppPicker(done){
 // ===== Configuración inicial (primera vez) =====
 let wizOn = false, wizStep = 0, wizRoot = LS.getItem('gl_root') || '', wizTimer = 0;
 function startWizard(step){ wizOn = true; wizStep = step || 0; $('wiz').style.display = 'flex'; wizRender(); }
-function wizEnd(){ try { LS.setItem('gl_setup', '1'); } catch(e) {} clearInterval(wizTimer); $('wiz').style.display = 'none'; wizOn = false; render(); }
+function wizEnd(){ try { LS.setItem('gl_setup', '1'); } catch(e) {} clearInterval(wizTimer); $('wiz').style.display = 'none'; wizOn = false; render(); releaseIntro(); }
 function wizGo(n){ clearInterval(wizTimer); wizStep = n; wizRender(); }
 function wizRender(){
   const dots = Array.from({ length:6 }, (_, i) => `<span class="w-2.5 h-2.5 rounded-full ${i <= wizStep ? 'bg-white' : 'bg-white/25'}"></span>`).join('');
@@ -1074,61 +1125,114 @@ function padInfo(gp){
     : brand === 'xb' ? 'Mando Xbox' : brand === 'nin' ? 'Mando Nintendo' : (id.split('(')[0].trim() || 'Mando');
   return { brand, name };
 }
-let padVar = { ps:1, xb:1, nin:1, gen:1 };
-try { Object.assign(padVar, JSON.parse(LS.getItem('gl_padvar') || '{}')); } catch(e) {}
+let padVar = { ps:1, xb:1, nin:1, gen:1 }, padOffVar = { ps:1, xb:1, nin:1, gen:1 };
+try { Object.assign(padVar, JSON.parse(LS.getItem('gl_padvar') || '{}')); Object.assign(padOffVar, JSON.parse(LS.getItem('gl_padoff') || '{}')); } catch(e) {}
 const PADV = {
-  ps:  { label:'PlayStation',  ic:'🔵', list:[{ name:'Clásica', desc:'Tarjeta con los símbolos △ ○ ✕ □' }, { name:'Ondas', desc:'Ondas azules y símbolos alrededor' }, { name:'Símbolos', desc:'Los símbolos vuelan desde las esquinas' }] },
-  xb:  { label:'Xbox',         ic:'🟢', list:[{ name:'Clásica', desc:'Anillo verde giratorio y botones A B X Y' }, { name:'Orbe', desc:'Destello verde y orbe que gira' }, { name:'Barrido', desc:'Un rayo de luz cruza la pantalla' }] },
-  nin: { label:'Nintendo',     ic:'🔴', list:[{ name:'Clásica', desc:'Ícono rojo y azul que salta' }, { name:'Joy-Con', desc:'Dos Joy-Con que se juntan al centro' }, { name:'Burbujas', desc:'Burbujas rojas y azules que suben' }] },
-  gen: { label:'Otros mandos', ic:'⚪', list:[{ name:'Clásica', desc:'Tarjeta gris sencilla' }, { name:'Pulso', desc:'Un pulso de luz al centro' }, { name:'Barra', desc:'Barra de carga que se llena' }] }
+  ps:  { label:'PlayStation',  ic:'🔵', list:[['Clásica','Tarjeta con los símbolos △ ○ ✕ □'], ['Ondas','Ondas azules y símbolos alrededor'], ['Símbolos','Los símbolos vuelan desde las esquinas'], ['Haz de luz','Un haz de luz baja hasta el mando'], ['Estallido','Estallido de partículas de colores'], ['Marquesina','Los símbolos cruzan la pantalla']] },
+  xb:  { label:'Xbox',         ic:'🟢', list:[['Clásica','Anillo verde giratorio y botones A B X Y'], ['Orbe','Destello verde y orbe que gira'], ['Barrido','Un rayo de luz cruza la pantalla'], ['Latido','El orbe late como un corazón'], ['Esfera','Esfera brillante con los botones en órbita'], ['Cortina','Una cortina verde cruza la pantalla']] },
+  nin: { label:'Nintendo',     ic:'🔴', list:[['Clásica','Ícono rojo y azul que salta'], ['Joy-Con','Dos Joy-Con que se juntan al centro'], ['Burbujas','Burbujas rojas y azules que suben'], ['Estrellas','Estrellitas que brillan'], ['Pong','Una pelota rebota entre dos barras'], ['Moneda','Una moneda gira y cae']] },
+  gen: { label:'Otros mandos', ic:'⚪', list:[['Clásica','Tarjeta gris sencilla'], ['Pulso','Un pulso de luz al centro'], ['Barra','Barra de carga que se llena'], ['Destello','Destello blanco y anillo que se cierra'], ['Escáner','Una línea de luz escanea la tarjeta'], ['Puntos','Tres puntos y una palomita']] }
 };
+const OFFV = [['Clásica','Tarjeta gris que se va'], ['Anillos','Los anillos se cierran y el mando se apaga'], ['Apagado','La pantalla se apaga como un televisor viejo'], ['Chispas','El mando parpadea y caen chispas'], ['Desenchufado','La tarjeta se sacude y sale volando'], ['Glitch','El texto se distorsiona y desaparece']];
 const PSND = {
   ps: [
     () => { tone(587, 0, .25, .07); tone(880, .12, .3, .06); tone(1174, .24, .5, .05); [.55, .7, .85, 1].forEach((t, i) => tone(1500 + i * 180, t, .08, .025)); },
     () => { [587, 784, 988, 1318].forEach((f, i) => tone(f, i * .13, .4, .05)); tone(2637, .6, .7, .015); tone(1318, .9, .7, .03); },
-    () => { [.3, .45, .6, .75].forEach((t, i) => tone(900 + i * 220, t, .09, .05, 1400 + i * 220)); tone(587, .95, .35, .06); tone(880, .97, .5, .055); tone(1174, .99, .7, .05); }
+    () => { [.3, .45, .6, .75].forEach((t, i) => tone(900 + i * 220, t, .09, .05, 1400 + i * 220)); tone(587, .95, .35, .06); tone(880, .97, .5, .055); tone(1174, .99, .7, .05); },
+    () => { tone(300, 0, .8, .04, 1200); tone(1318, .6, .6, .05); tone(1760, .65, .7, .03); },
+    () => { noise(.05, .3); tone(880, 0, .2, .06); [988, 1174, 1480].forEach((f, i) => tone(f, .1 + i * .08, .4, .045)); },
+    () => { for (let i = 0; i < 8; i++) tone(1000 + i * 100, i * .15, .06, .04); tone(587, 1.3, .4, .06); tone(880, 1.32, .6, .05); tone(1174, 1.34, .8, .04); }
   ],
   xb: [
     () => { tone(150, 0, .5, .035, 600, 'sawtooth'); tone(392, .3, .5, .06); tone(587, .42, .5, .055); tone(784, .54, .8, .05); },
     () => { tone(110, 0, .8, .05, 440, 'sawtooth'); tone(659, .55, .6, .05); tone(988, .62, .7, .045); },
-    () => { tone(300, 0, .6, .03, 1800, 'sawtooth'); tone(880, .55, .4, .06); tone(1320, .65, .55, .05); }
+    () => { tone(300, 0, .6, .03, 1800, 'sawtooth'); tone(880, .55, .4, .06); tone(1320, .65, .55, .05); },
+    () => { tone(90, 0, .18, .08); tone(90, .22, .22, .07); tone(587, .7, .5, .05); tone(880, .78, .6, .04); },
+    () => { tone(220, 0, .9, .04, 880, 'sawtooth'); tone(1320, .8, .8, .05); },
+    () => { tone(200, 0, 1.3, .04, 1000, 'sawtooth'); tone(784, 1.2, .4, .05); tone(1175, 1.3, .6, .045); }
   ],
   nin: [
     () => { tone(988, 0, .08, .05, null, 'square'); tone(1319, .09, .22, .05, null, 'square'); },
     () => { tone(523, 0, .2, .05, null, 'square'); tone(784, .1, .2, .05, null, 'square'); tone(988, .6, .08, .05, null, 'square'); tone(1319, .68, .35, .05, null, 'square'); },
-    () => { for (let i = 0; i < 8; i++) tone(400 + Math.random() * 700, i * .12, .1, .04, 900 + Math.random() * 900); tone(1319, 1, .3, .04); }
+    () => { for (let i = 0; i < 8; i++) tone(400 + Math.random() * 700, i * .12, .1, .04, 900 + Math.random() * 900); tone(1319, 1, .3, .04); },
+    () => { for (let i = 0; i < 9; i++) tone(1500 + Math.random() * 1300, i * .11, .12, .03); tone(1319, 1, .5, .04); },
+    () => { [0, .4, .8, 1.2].forEach((t, i) => tone(i % 2 ? 660 : 440, t, .07, .05, null, 'square')); tone(988, 1.7, .1, .05, null, 'square'); tone(1319, 1.8, .4, .05, null, 'square'); },
+    () => { tone(300, 0, .8, .03, 900); tone(988, .9, .08, .05, null, 'square'); tone(1319, .98, .5, .05, null, 'square'); }
   ],
   gen: [
     () => { tone(660, 0, .12, .06); tone(990, .08, .25, .05); },
     () => { tone(880, 0, .5, .05); tone(880, .35, .8, .025); },
-    () => { tone(300, 0, 1.4, .025, 900); tone(1100, 1.4, .3, .05); }
+    () => { tone(300, 0, 1.4, .025, 900); tone(1100, 1.4, .3, .05); },
+    () => { tone(1200, 0, .3, .06, 300); tone(660, .2, .3, .05); },
+    () => { tone(300, 0, 1.4, .025, 1200); tone(1100, 1.5, .25, .05); },
+    () => { [0, .35, .7].forEach(t => tone(660, t, .12, .05)); tone(990, 1.9, .3, .06); }
   ]
 };
+const OB = { ps:[880, 'sine'], xb:[659, 'sawtooth'], nin:[988, 'square'], gen:[660, 'sine'] };
+function padOffSound(brand, v){
+  const [f, w] = OB[brand], vol = w === 'sine' ? .06 : .03;
+  [
+    () => { tone(f * .75, 0, .18, vol, f * .375, w); tone(f * .5, .12, .25, vol * .85, f * .25, w); },
+    () => tone(f, 0, 1, vol, f / 4, w),
+    () => [1, .84, .7, .56, .42].forEach((m, i) => tone(f * m, i * .1, .12, vol, null, w)),
+    () => [1, 1.25, 1.5].forEach(m => tone(f * m * .5, 0, .9, vol * .7, f * m * .25, w)),
+    () => { noise(.05, .35); tone(f * .35, 0, .4, vol * 1.2, f * .15, w); },
+    () => { for (let i = 0; i < 7; i++) tone(200 + Math.random() * 1000, i * .07, .06, vol * .8, null, 'square'); }
+  ][(v || 1) - 1]();
+}
 function padSound(brand, off, v){
   if (!uiSound || pack === 'none') return; pv = 1;
-  try { if (off) { tone(660, 0, .18, .06, 330); tone(440, .12, .25, .05, 220); return; } (PSND[brand][(v || 1) - 1] || PSND[brand][0])(); } catch(e) {}
+  try { if (off) padOffSound(brand, v); else (PSND[brand][(v || 1) - 1] || PSND[brand][0])(); } catch(e) {}
 }
 function padFx(brand, name, n, off, v){
-  v = off ? 1 : (v || padVar[brand] || 1);
+  v = v || (off ? padOffVar[brand] : padVar[brand]) || 1;
   const box = $('padfx'), fs = $('padfs'); clearTimeout(padT); box.innerHTML = ''; fs.innerHTML = '';
   const sets = { ps:[['△','#54d6a1'],['○','#ff6b7a'],['✕','#6aa8ff'],['□','#ff9bd2']], xb:[['A','#7ddc6b'],['B','#ff5a5a'],['X','#5aa8ff'],['Y','#ffd23f']], nin:[['A','#fff'],['B','#fff'],['X','#fff'],['Y','#fff']], gen:[] };
+  const cols = (sets[brand].length ? sets[brand] : [['●','#fff'],['●','#cbd5e1'],['●','#e2e8f0'],['●','#94a3b8']]).map(x => x[1]);
   const sub = off ? 'Mando desconectado' : 'Mando ' + n + ' conectado';
   const theme = { ps:'--c:linear-gradient(135deg,#2f6bff,#1a2f8f);--g:#5b8cff', xb:'--c:#0f3d0f;--g:#5fd35f', nin:'--c:linear-gradient(90deg,#e60012 50%,#00a1e9 50%);--g:#ff4d5a', gen:'--c:linear-gradient(135deg,#6b7280,#374151);--g:#cbd5e1' }[brand];
   const lbl = `<div class="lbl"><b>${name}</b><span>${sub}</span></div>`;
-  const pill = () => `<div class="pfx ${brand} ${off ? 'off' : ''}"><div class="pfx-ic"><span class="pfx-sp"></span><span class="pfx-bd"></span>${CTRL_SVG}</div><div class="pfx-tx"><b>${name}</b><span>${sub}</span></div>${off ? '' : `<div class="pfx-sym">${sets[brand].map(([t, c], i) => `<i style="--k:${c};--d:${(.55 + i * .15).toFixed(2)}s">${t}</i>`).join('')}</div>`}</div>`;
-  const rings = `<i class="rg" style="--d:0s"></i><i class="rg" style="--d:.5s"></i><i class="rg" style="--d:1s"></i>`;
-  const orb = (extra) => `<div class="ob">${rings}<div class="orb">${extra || ''}${CTRL_SVG}</div>${lbl}</div>`;
-  if (v === 1 || off) box.innerHTML = pill();
-  else if (brand === 'ps' && v === 2) fs.innerHTML = `<div class="fx" style="${theme}"><div class="ob">${rings}<div class="orb">${CTRL_SVG}</div>${sets.ps.map(([t, c], i) => `<i class="os" style="--a:${i * 90}deg;--k:${c};--d:${(.7 + i * .12).toFixed(2)}s">${t}</i>`).join('')}${lbl}</div></div>`;
-  else if (brand === 'ps') fs.innerHTML = `<div class="fx" style="${theme}"><div class="col"><div class="fly">${sets.ps.map(([t, c], i) => `<i class="fs" style="--k:${c};--sx:${[-44, 44, -44, 44][i]}vw;--sy:${[-38, -38, 38, 38][i]}vh;--ex:${(i - 1.5) * 8.2}vh;--d:${(i * .12).toFixed(2)}s">${t}</i>`).join('')}</div><div style="position:relative;height:2vh;width:100%"><div class="ln" style="top:0"></div></div>${lbl}</div></div>`;
-  else if (brand === 'xb' && v === 2) fs.innerHTML = `<div class="fx" style="${theme}"><div class="flash"></div><div class="ob">${rings}<div class="orb"><span class="sp"></span><span class="bd"></span>${CTRL_SVG}</div>${lbl}</div></div>`;
-  else if (brand === 'xb') fs.innerHTML = `<div class="fx" style="${theme}"><div class="sweep"></div><div class="bl">${pill()}</div></div>`;
-  else if (brand === 'nin' && v === 2) fs.innerHTML = `<div class="fx" style="${theme}"><div class="jc l"><i></i></div><div class="jc r"><i></i></div><div class="jlbl lbl" style="animation-delay:.9s">${lbl.replace('<div class="lbl">', '<div>').replace(/<\/div>$/, '</div>')}</div></div>`;
-  else if (brand === 'nin') fs.innerHTML = `<div class="fx" style="${theme}">${Array.from({ length: 14 }, (_, i) => `<i class="bb" style="--x:${5 + Math.round(i * 6.7)}%;--s:${(2.6 + (i * 37 % 40) / 10).toFixed(1)}vh;--d:${((i * 53 % 10) / 10).toFixed(1)}s;--c:${i % 3 === 0 ? '#e60012' : i % 3 === 1 ? '#00a1e9' : '#fff'}"></i>`).join('')}<div class="mid">${pill()}</div></div>`;
-  else if (v === 2) fs.innerHTML = `<div class="fx" style="${theme}"><div class="ob">${rings}<div class="orb">${CTRL_SVG}</div>${lbl}</div></div>`;
-  else fs.innerHTML = `<div class="fx" style="${theme};align-items:flex-end;padding-bottom:7vh"><div class="gbar">${lbl}<div class="trk"><i></i></div></div></div>`;
-  padT = setTimeout(() => { box.innerHTML = ''; fs.innerHTML = ''; }, off ? 2500 : 4300);
-  padSound(brand, off, v);
+  const pill = x => `<div class="pfx ${brand} ${off ? 'off' : ''} ${x || ''}"><div class="pfx-ic"><span class="pfx-sp"></span><span class="pfx-bd"></span>${off && x === 'unp' ? '<span style="position:relative;z-index:1;font-size:2.6vh">🔌</span>' : CTRL_SVG}</div><div class="pfx-tx"><b>${name}</b><span>${sub}</span></div>${off ? '' : `<div class="pfx-sym">${sets[brand].map(([t, c], i) => `<i style="--k:${c};--d:${(.55 + i * .15).toFixed(2)}s">${t}</i>`).join('')}</div>`}</div>`;
+  const rings = (c) => `<i class="rg ${c || ''}" style="--d:0s"></i><i class="rg ${c || ''}" style="--d:.5s"></i><i class="rg ${c || ''}" style="--d:1s"></i>`;
+  const orb = (cls, inner) => `<div class="orb ${cls || ''}">${inner || ''}${CTRL_SVG}</div>`;
+  const orbit = `${sets[brand].map(([t, c], i) => `<i class="os" style="--a:${i * 90}deg;--k:${c};--d:${(.7 + i * .12).toFixed(2)}s">${t}</i>`).join('')}`;
+  const FX = (inner, cls, st) => { fs.innerHTML = `<div class="fx ${cls || ''}" style="${theme};${st || ''}">${inner}</div>`; };
+  const burst = (k) => Array.from({ length:18 }, (_, i) => `<i class="pt" style="--a:${i * 20}deg;--r:${(14 + (i * 7) % 12)}vh;--k:${cols[i % 4]}"></i>`).join('');
+  const sparkles = Array.from({ length:10 }, (_, i) => `<i class="st" style="--x:${[38, 56, 30, 62, 44, 50, 26, 68, 36, 58][i]}%;--y:${[26, 30, 46, 48, 66, 24, 62, 62, 36, 70][i]}%;--k:${i % 2 ? '#ff4d5a' : '#27b4f5'};--d:${(i * .13).toFixed(2)}s">✦</i>`).join('');
+  if (off) {
+    if (v === 1) box.innerHTML = pill();
+    else if (v === 2) FX(`<div class="ob">${rings('in')}${orb('out')}${lbl}</div>`, 'off');
+    else if (v === 3) FX(`<div class="crt"></div><div class="lbl" style="position:absolute;left:0;right:0;top:60%;animation-delay:.9s">${lbl.slice(17, -6)}</div>`, 'off');
+    else if (v === 4) FX(`<div class="ob">${orb('dim')}${Array.from({ length:14 }, (_, i) => `<i class="pt fall" style="--dx:${(i - 7) * 1.6}vh;--k:var(--g);--d:${(.5 + i * .06).toFixed(2)}s"></i>`).join('')}${lbl}</div>`, 'off');
+    else if (v === 5) box.innerHTML = pill('unp');
+    else FX(`<div class="gl"><b>${name}</b><span>${sub}</span></div>`, 'off');
+    padT = setTimeout(() => { box.innerHTML = ''; fs.innerHTML = ''; }, 3300);
+    padSound(brand, true, v); return;
+  }
+  const key = brand + v;
+  if (v === 1) box.innerHTML = pill();
+  else if (key === 'ps2') FX(`<div class="ob">${rings()}${orb()}${orbit}${lbl}</div>`);
+  else if (key === 'ps3') FX(`<div class="col"><div class="fly">${sets.ps.map(([t, c], i) => `<i class="fs" style="--k:${c};--sx:${[-44, 44, -44, 44][i]}vw;--sy:${[-38, -38, 38, 38][i]}vh;--ex:${(i - 1.5) * 8.2}vh;--d:${(i * .12).toFixed(2)}s">${t}</i>`).join('')}</div><div style="position:relative;height:2vh;width:100%"><div class="ln" style="top:0"></div></div>${lbl}</div>`);
+  else if (key === 'ps4') FX(`<div class="beam"></div><div class="ob">${rings()}${orb()}${lbl}</div>`);
+  else if (key === 'ps5') FX(`<div class="ob">${burst()}${orb()}${orbit}${lbl}</div>`);
+  else if (key === 'ps6') FX(`<div class="mq"><span class="tr">${Array.from({ length:12 }, (_, i) => `<span style="color:${cols[i % 4]}">${sets.ps[i % 4][0]}</span>`).join('')}</span></div><div class="lbl" style="position:absolute;left:0;right:0;top:58%;animation-delay:.9s">${lbl.slice(17, -6)}</div>`);
+  else if (key === 'xb2') FX(`<div class="flash"></div><div class="ob">${rings()}<div class="orb"><span class="sp"></span><span class="bd"></span>${CTRL_SVG}</div>${lbl}</div>`);
+  else if (key === 'xb3') FX(`<div class="sweep"></div><div class="bl">${pill()}</div>`);
+  else if (key === 'xb4') FX(`<div class="ob">${rings()}${orb('beat')}${lbl}</div>`);
+  else if (key === 'xb5') FX(`<div class="ob"><div class="sph"></div><div class="orb" style="background:none;box-shadow:none">${CTRL_SVG}</div>${orbit}${lbl}</div>`);
+  else if (key === 'xb6') FX(`<div class="cur"></div><div class="col" style="position:relative">${orb().replace('class="orb "', 'class="orb" style="position:relative;width:9vh;height:9vh"')}${lbl.replace('class="lbl"', 'class="lbl" style="animation-delay:.7s"')}</div>`);
+  else if (key === 'nin2') FX(`<div class="jc l"><i></i></div><div class="jc r"><i></i></div><div class="jlbl lbl" style="animation-delay:.9s">${lbl.slice(17, -6)}</div>`);
+  else if (key === 'nin3') FX(`${Array.from({ length:14 }, (_, i) => `<i class="bb" style="--x:${5 + Math.round(i * 6.7)}%;--s:${(2.6 + (i * 37 % 40) / 10).toFixed(1)}vh;--d:${((i * 53 % 10) / 10).toFixed(1)}s;--c:${i % 3 === 0 ? '#e60012' : i % 3 === 1 ? '#00a1e9' : '#fff'}"></i>`).join('')}<div class="mid">${pill()}</div>`);
+  else if (key === 'nin4') FX(`${sparkles}<div class="ob">${orb()}${lbl}</div>`);
+  else if (key === 'nin5') FX(`<i class="pd l"></i><i class="pd r"></i><i class="ball"></i><div class="lbl" style="animation-delay:1.7s">${lbl.slice(17, -6)}</div>`);
+  else if (key === 'nin6') FX(`<div class="ob pers">${orb('coin')}${lbl.replace('class="lbl"', 'class="lbl" style="animation-delay:1.2s"')}</div>`);
+  else if (key === 'gen2') FX(`<div class="ob">${rings()}${orb()}${lbl}</div>`);
+  else if (key === 'gen3') FX(`<div class="gbar">${lbl}<div class="trk"><i></i></div></div>`, '', 'align-items:flex-end;padding-bottom:7vh');
+  else if (key === 'gen4') FX(`<div class="flashw"></div><div class="ob">${rings('in')}${orb()}${lbl}</div>`);
+  else if (key === 'gen5') FX(`<div class="card"><div class="scan"></div><div class="pfx-ic" style="background:var(--c)">${CTRL_SVG}</div>${lbl}</div>`);
+  else FX(`<div class="col"><div class="dots"><i style="--d:0s"></i><i style="--d:.15s"></i><i style="--d:.3s"></i></div><div class="chk">✓</div>${lbl.replace('class="lbl"', 'class="lbl" style="animation-delay:1.9s"')}</div>`);
+  padT = setTimeout(() => { box.innerHTML = ''; fs.innerHTML = ''; }, 4400);
+  padSound(brand, false, v);
 }
 function onPadConnect(gp){
   const info = padInfo(gp); lastPad = info; padFx(info.brand, info.name, gp.index + 1, false);
@@ -1136,13 +1240,18 @@ function onPadConnect(gp){
 }
 function onPadDisconnect(){ const i = lastPad || { brand:'gen', name:'Mando' }; padFx(i.brand, i.name, 1, true); }
 function openPadTest(){
-  openPanel('Animaciones de mando', () => Object.keys(PADV).map(k => ({ i:PADV[k].ic, t:PADV[k].label, s:'Estilo ' + padVar[k] + ' · ' + PADV[k].list[padVar[k] - 1].name, go:true, keep:true, f:() => openPadBrand(k) }))
-    .concat([{ i:'⏏️', t:'Probar desconexión', s:'Animación al quitar el mando', keep:true, f:() => padFx('ps', 'DualSense', 1, true) }]));
+  openPanel('Animaciones de mando', () => Object.keys(PADV).map(k => ({ i:PADV[k].ic, t:PADV[k].label, s:'Conectar: ' + PADV[k].list[padVar[k] - 1][0] + ' · Desconectar: ' + OFFV[padOffVar[k] - 1][0], go:true, keep:true, f:() => openPadBrand(k) })));
 }
 function openPadBrand(k){
-  const names = { ps:'DualSense', xb:'Mando Xbox', nin:'Mando Nintendo', gen:'Mando' };
-  openPanel(PADV[k].label + ' · elige tu animación', () => PADV[k].list.map((o, i) => ({ i: padVar[k] === i + 1 ? '✅' : '▫️', t:(i + 1) + '. ' + o.name, s:o.desc, keep:true,
-    f:() => { padVar[k] = i + 1; LS.setItem('gl_padvar', JSON.stringify(padVar)); padFx(k, names[k], 1, false, i + 1); } })));
+  openPanel(PADV[k].label, () => [
+    { i:'🔌', t:'Al conectar', s:'Estilo ' + padVar[k] + ' · ' + PADV[k].list[padVar[k] - 1][0], go:true, keep:true, f:() => openPadList(k, false) },
+    { i:'⏏️', t:'Al desconectar', s:'Estilo ' + padOffVar[k] + ' · ' + OFFV[padOffVar[k] - 1][0], go:true, keep:true, f:() => openPadList(k, true) }
+  ]);
+}
+function openPadList(k, off){
+  const names = { ps:'DualSense', xb:'Mando Xbox', nin:'Mando Nintendo', gen:'Mando' }, src = off ? OFFV : PADV[k].list, cur = off ? padOffVar : padVar;
+  openPanel(PADV[k].label + (off ? ' · al desconectar' : ' · al conectar'), () => src.map((o, i) => ({ i: cur[k] === i + 1 ? '✅' : '▫️', t:(i + 1) + '. ' + o[0], s:o[1], keep:true,
+    f:() => { cur[k] = i + 1; LS.setItem(off ? 'gl_padoff' : 'gl_padvar', JSON.stringify(cur)); padFx(k, names[k], 1, off, i + 1); } })));
 }
 
 
@@ -1180,7 +1289,7 @@ function gpUiNav(gp){
   return true;
 }
 
-loadBuf('scroll'); loadBuf('sel'); startIntroAudio();
+loadBuf('scroll'); loadBuf('sel'); if (wizOn) holdIntro(); else startIntroAudio();
 render();
 </script>
 </body>
