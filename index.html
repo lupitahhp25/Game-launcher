@@ -250,6 +250,34 @@
   .avbtn.tap { animation:avtap .65s ease-out; }
   @keyframes avtap { 0%{box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 0 0 rgba(120,160,255,.85)} 100%{box-shadow:0 0 0 2px rgba(255,255,255,.55),0 0 0 2.6vh rgba(120,160,255,0)} }
   #plist { position:relative; overflow-x:hidden; }
+  .cw { position:relative; display:flex; gap:2vh; width:min(94vw,64rem); height:min(86vh,34rem); padding:2vh; }
+  .cws { flex:0 0 22%; display:flex; flex-direction:column; gap:1vh; padding:1.4vh; border-radius:2.6vh; background:rgba(20,22,26,.55); align-self:flex-start; }
+  .cwb { display:flex; align-items:center; gap:1.2vh; padding:1.3vh 1.4vh; border-radius:1.8vh; font-size:clamp(.75rem,2.8vh,1.05rem); font-weight:600; text-align:left; color:rgba(255,255,255,.85); }
+  .cwb small { display:block; font-size:.62em; font-weight:500; color:rgba(255,255,255,.55); }
+  .cwb.on { background:rgba(255,255,255,.1); color:#a78bfa; }
+  .cwm { flex:1; min-width:0; overflow-y:auto; padding-right:.6vh; padding-top:3.2vh; }
+  .cwx { position:absolute; top:1vh; right:1.4vh; font-size:2.6vh; color:rgba(255,255,255,.8); width:4vh; height:4vh; }
+  .cwg { display:flex; align-items:center; gap:.8vh; font-size:clamp(.62rem,2.1vh,.8rem); font-weight:700; color:rgba(255,255,255,.7); padding:1.6vh .4vh .6vh; }
+  .cwr { display:flex; align-items:center; gap:1.4vh; width:100%; padding:1.1vh 1.6vh; margin-bottom:.6vh; border-radius:2vh; background:rgba(24,26,30,.62); text-align:left; }
+  .cwr.on { background:rgba(60,64,72,.92); }
+  .cwr .rad { flex:0 0 2.4vh; width:2.4vh; height:2.4vh; border-radius:50%; background:rgba(255,255,255,.35); }
+  .cwr .rad.on { background:#4aa8ff; box-shadow:inset 0 0 0 .55vh rgba(255,255,255,.9); }
+  .cwr .cwi { flex:0 0 3vh; text-align:center; font-size:2.6vh; }
+  .cwr .cwt { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .cwr .cwt b { font-size:clamp(.78rem,2.9vh,1.05rem); }
+  .cwr .cwt small { font-size:clamp(.58rem,1.9vh,.75rem); color:rgba(255,255,255,.6); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cwin { width:100%; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.2); border-radius:2vh; padding:1.2vh 1.8vh; font-size:clamp(.75rem,2.7vh,1rem); outline:none; margin-bottom:.8vh; }
+  .cwn { display:flex; justify-content:flex-end; gap:1.2vh; padding:1.4vh 0 .6vh; }
+  .cwp { padding:1.1vh 3vh; border-radius:9999px; background:rgba(255,255,255,.14); font-size:clamp(.72rem,2.6vh,.95rem); font-weight:600; }
+  .cwp.pri { background:#fff; color:#000; }
+  .cwp[disabled] { opacity:.35; }
+  .cwnote { font-size:clamp(.6rem,2vh,.8rem); color:rgba(255,255,255,.6); padding:.4vh .4vh 1vh; }
+  .cwimg { flex:0 0 3.6vh; width:3.6vh; height:3.6vh; border-radius:.9vh; object-fit:cover; }
+  .cwchip { display:flex; align-items:center; gap:1vh; padding:.7vh 1.4vh; border-radius:2vh; background:rgba(0,0,0,.4); border:2px solid #fff; margin-left:auto; max-width:55%; text-align:left; }
+  .cwchip span { display:flex; flex-direction:column; min-width:0; } .cwchip b { font-size:clamp(.72rem,2.6vh,.95rem); } .cwchip small { font-size:clamp(.56rem,1.8vh,.72rem); color:rgba(255,255,255,.6); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cwgo { flex:0 0 3.4vh; width:3.4vh; height:3.4vh; border-radius:50%; background:rgba(255,255,255,.4); color:#111; display:flex; align-items:center; justify-content:center; font-size:1.8vh; margin-left:auto; }
+  .cwk { display:flex; align-items:center; gap:1.4vh; width:100%; padding:1.2vh 1.6vh; margin-bottom:.6vh; border-radius:2vh; background:rgba(24,26,30,.62); }
+  .cwk b { flex:1; font-size:clamp(.74rem,2.7vh,1rem); } .cwk em { font-style:normal; font-weight:700; font-size:clamp(.62rem,2.2vh,.85rem); text-align:right; max-width:50%; overflow:hidden; text-overflow:ellipsis; }
 </style>
 </head>
 <body>
@@ -380,7 +408,7 @@ const $ = id => document.getElementById(id);
 const list = () => games.filter(g =>
   !(cat==='NATIVE APPS' && g.type!=='NATIVE') && !(cat==='EMULATORS' && g.type!=='EMULATOR') &&
   !(cat==='FAVORITES' && !g.fav) && !(cat==='RECENTLY PLAYED' && !g.played) && !(plat!=='ALL' && g.platform!==plat) && (!q || (g.title+' '+g.platform).toLowerCase().includes(q)));
-const clean = t => String(t).replace(/(\.(xiso|iso|cso|chd|bin|rvz|gcm|nsp|xci|3ds|cia|gba|pbp|cue|wbfs|gcz))+$/i, '');
+const clean = t => String(t).replace(/(\.(xiso|iso|cso|chd|bin|rvz|gcm|nsp|xci|3ds|cia|gba|pbp|cue|wbfs|gcz|nes|sfc|smc|n64|z64|v64|gb|gbc|nds|md|gen|smd|gg|cdi|gdi|vpk|xex|wua|wud|wux|cxi|pkg))+$/i, '');
 const grad = g => `linear-gradient(135deg, ${g[0]}, ${g[1]})`;
 
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.remove('hidden'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.add('hidden'),2500); }
@@ -567,9 +595,9 @@ const EMU = {
   GAMECUBE: { activity:'org.dolphinemu.dolphinemu.ui.main.MainActivity', action:'android.intent.action.MAIN', extraKey:'AutoStartFile' },
   PS1: { activity:'com.github.stenzek.duckstation.EmulationActivity', action:'android.intent.action.MAIN', extraKey:'bootPath' },
   SWITCH: { force:true, package:'dev.eden.eden_emulator', hint:'eden', activity:'org.yuzu.yuzu_emu.activities.EmulationActivity', action:'android.intent.action.VIEW', saf:true },
-  XBOX: { force:true, package:'com.rfandango.hakux', hint:'hakux' }
+  XBOX: { force:true, package:'com.rfandango.haku_x', hint:'haku' }
 };
-const PLAT_EMU = { PS2:'xyz.aethersx2.android', PSP:'org.ppsspp.ppsspp', GAMECUBE:'org.dolphinemu.dolphinemu', SWITCH:'dev.eden.eden_emulator', N3DS:'org.citra.citra_emu', GBA:'com.retroarch', XBOX:'com.rfandango.hakux', PS1:'com.github.stenzek.duckstation' };
+const PLAT_EMU = { PS2:'xyz.aethersx2.android', PSP:'org.ppsspp.ppsspp', GAMECUBE:'org.dolphinemu.dolphinemu', SWITCH:'dev.eden.eden_emulator', N3DS:'org.citra.citra_emu', GBA:'com.retroarch', XBOX:'com.rfandango.haku_x', PS1:'com.github.stenzek.duckstation' };
 const EXTS = { PS2:'.iso,.chd,.bin', PSP:'.cso,.iso,.pbp', GAMECUBE:'.rvz,.iso,.gcm', SWITCH:'.nsp,.xci', N3DS:'.3ds,.cia', GBA:'.gba', XBOX:'.iso,.xiso', PS1:'.cue,.chd,.pbp' };
 let lastPath = '/storage/emulated/0/ROMS/PS2', lastPlat = 'PS2';
 
@@ -980,9 +1008,9 @@ async function wizScan(){
 }
 $('rescanbtn').onclick = async () => {
   if (!Launcher) { toast('Solo funciona dentro de la app Android'); return; }
-  if (!wizRoot) { startWizard(1); return; }
-  toast('🔄 Escaneando ' + wizRoot + '…');
-  try { const r = await scanRootAll(wizRoot); toast('✅ ' + r.added + ' juego(s) nuevos'); } catch(e) { toast('⚠️ ' + (e.message || e)); }
+  if (!wizRoot && !CONSOLES.length) { startWizard(1); return; }
+  toast('🔄 Escaneando…');
+  try { let n = 0; if (wizRoot) n += (await scanRootAll(wizRoot)).added; for (const c of CONSOLES) n += await scanConsole(c); toast('✅ ' + n + ' juego(s) nuevos'); } catch(e) { toast('⚠️ ' + (e.message || e)); }
 };
 $('appsbtn').onclick = () => openAppPicker();
 $('setupbtn').onclick = () => startWizard(0);
@@ -1148,6 +1176,8 @@ function openMainMenu(){
   openPanel('Menú principal', () => [
     { i:'👤', t:profile.name, s:'Cambia tu foto y tu nombre', go:true, f:() => $('profbtn').click() },
     { i:'📁', t:'Escanear ROMs', s:'Elige una carpeta de juegos', go:true, f:() => $('scanbtn').click() },
+    { i:'➕', t:'Agregar consola', s:'Elige consola, emulador y carpeta de juegos', go:true, f:() => openConsoleWizard() },
+    { i:'🧩', t:'Mis consolas', s:CONSOLES.length ? CONSOLES.length + ' agregada(s)' : 'Edita o quita las que agregaste', go:true, keep:true, f:openMyConsoles },
     { i:'🖼️', t:'Carátulas y datos', s:'Descarga portadas, fondos y videos', go:true, f:() => $('ssbtn').click() },
     { i:'📱', t:'Agregar juegos de Android', s:'Apps y juegos instalados', go:true, f:() => $('appsbtn').click() },
     { i:'🔄', t:'Re-escanear mi carpeta', s:wizRoot || 'Aún no elegiste carpeta', f:() => $('rescanbtn').click() },
@@ -1413,9 +1443,263 @@ function safUriJs(path, tree){
   return auth + 'document/' + enc(p[0] + ':' + p[1]);
 }
 function openEmuMenu(){
-  openPanel('Emuladores · carpeta registrada', () => ['PS2', 'SWITCH'].map(k => ({ i:'📂', t:PLATFORMS[k].name, s: trees[k] ? trees[k] : 'Automática (la carpeta de cada juego)', go:true, keep:true,
+  openPanel('Emuladores · carpeta registrada', () => [...new Set(['PS2', 'SWITCH'].concat(CONSOLES.filter(c => c.method === 'view' || (c.method === 'extra' && c.safx)).map(c => c.key)))].map(k => ({ i:'📂', t:PLATFORMS[k].name, s: trees[k] ? trees[k] : 'Automática (la carpeta de cada juego)', go:true, keep:true,
     f: async () => { try { const r = await Launcher.pickFolder(); if (r && r.path) { trees[k] = r.path; LS.setItem('gl_trees', JSON.stringify(trees)); toast('✅ Carpeta guardada para ' + PLATFORMS[k].code); pmRender(); } } catch(e) { if (e.message !== 'Cancelado') toast('⚠️ ' + (e.message || e)); } } }))
     .concat([{ i:'♻️', t:'Volver a automático', s:'Usar la carpeta donde está cada juego', keep:true, f:() => { trees = {}; LS.setItem('gl_trees', '{}'); toast('Listo: modo automático'); } }]));
+}
+
+
+// ===== Agregar consolas (asistente como iiSU) =====
+const BUILTIN = new Set(Object.keys(PLATFORMS));
+const CATALOG = [
+  ['PS2','PlayStation 2','Sony',2000,'PS2','.iso,.chd,.cso,.gz',58,'Sony - PlayStation 2'],
+  ['SWITCH','Nintendo Switch','Nintendo',2017,'SWITCH','.nsp,.xci',225,'Nintendo - Switch'],
+  ['PSP','PlayStation Portable','Sony',2004,'PSP','.cso,.iso,.pbp',61,'Sony - PlayStation Portable'],
+  ['GBA','Game Boy Advance','Nintendo',2001,'GBA','.gba,.zip',12,'Nintendo - Game Boy Advance'],
+  ['PS1','PlayStation','Sony',1994,'PS1','.cue,.chd,.pbp',57,'Sony - PlayStation'],
+  ['N64','Nintendo 64','Nintendo',1996,'N64','.n64,.z64,.v64,.zip',14,'Nintendo - Nintendo 64'],
+  ['GAMECUBE','Nintendo GameCube','Nintendo',2001,'GAMECUBE','.rvz,.iso,.gcm,.gcz',13,'Nintendo - GameCube'],
+  ['SNES','Super Nintendo','Nintendo',1992,'SNES','.sfc,.smc,.zip',4,'Nintendo - Super Nintendo Entertainment System'],
+  ['NDS','Nintendo DS','Nintendo',2004,'NDS','.nds,.zip',15,'Nintendo - Nintendo DS'],
+  ['N3DS','Nintendo 3DS','Nintendo',2011,'3DS','.3ds,.cia,.cxi',17,'Nintendo - Nintendo 3DS'],
+  ['WII','Nintendo Wii','Nintendo',2006,'WII','.wbfs,.rvz,.iso,.gcz',16,'Nintendo - Wii'],
+  ['NES','Nintendo Entertainment System','Nintendo',1985,'NES','.nes,.zip',3,'Nintendo - Nintendo Entertainment System'],
+  ['GEN','Sega Genesis','Sega',1989,'GEN','.md,.gen,.smd,.zip',1,'Sega - Mega Drive - Genesis'],
+  ['DC','Sega Dreamcast','Sega',1998,'DC','.cdi,.gdi,.chd,.cue',23,'Sega - Dreamcast'],
+  ['PS3','PlayStation 3','Sony',2006,'PS3','.iso,.pkg',59,'Sony - PlayStation 3'],
+  ['XBOX','Microsoft Xbox','Microsoft',2001,'XBOX','.iso,.xiso',32,'Microsoft - Xbox'],
+  ['GB','Nintendo Game Boy','Nintendo',1989,'GB','.gb,.zip',9,'Nintendo - Game Boy'],
+  ['GBC','Nintendo Game Boy Color','Nintendo',1998,'GBC','.gbc,.zip',10,'Nintendo - Game Boy Color'],
+  ['SAT','Sega Saturn','Sega',1995,'SAT','.cue,.chd,.iso',22,'Sega - Saturn'],
+  ['VITA','PlayStation Vita','Sony',2011,'VITA','.vpk',62,'Sony - PlayStation Vita'],
+  ['WIIU','Nintendo Wii U','Nintendo',2012,'WIIU','.wua,.wud,.wux',18,'Nintendo - Wii U'],
+  ['X360','Microsoft Xbox 360','Microsoft',2005,'X360','.iso,.xex',33,'Microsoft - Xbox 360'],
+  ['WINDOWS','Microsoft Windows','PC',1985,'WIN','.exe,.bat',0,''],
+  ['SCD','Sega CD','Sega',1992,'SCD','.cue,.chd,.iso',20,'Sega - Mega-CD - Sega CD'],
+  ['GG','Sega Game Gear','Sega',1990,'GG','.gg,.zip',21,'Sega - Game Gear']
+].map(a => ({ key:a[0], name:a[1], maker:a[2], year:a[3], code:a[4], exts:a[5], ss:a[6], lib:a[7] }));
+// Emuladores conocidos: nombres de paquete y de app para detectar cuál tienes instalado
+const EMUS = [
+  { id:'nethersx2', name:'NetherSX2 / AetherSX2', pkgs:['xyz.aethersx2.android'], rx:/aethersx2|nethersx2/i, cons:['PS2'], pre:{ method:'extra', act:'xyz.aethersx2.android.EmulationActivity', key2:'bootPath', safx:true } },
+  { id:'duck', name:'DuckStation', pkgs:['com.github.stenzek.duckstation'], rx:/duckstation/i, cons:['PS1'], pre:{ method:'extra', act:'com.github.stenzek.duckstation.EmulationActivity', key2:'bootPath', safx:false } },
+  { id:'ppsspp', name:'PPSSPP', pkgs:['org.ppsspp.ppsspp', 'org.ppsspp.ppssppgold'], rx:/ppsspp/i, cons:['PSP'], pre:{ method:'viewpath', act:'org.ppsspp.ppsspp.PpssppActivity' } },
+  { id:'dolphin', name:'Dolphin', pkgs:['org.dolphinemu.dolphinemu', 'org.dolphinemu.mmjr'], rx:/dolphin emulator|dolphin mmj|dolphinemu/i, cons:['GAMECUBE', 'WII'], pre:{ method:'extra', act:'org.dolphinemu.dolphinemu.ui.main.MainActivity', key2:'AutoStartFile', safx:false } },
+  { id:'eden', name:'Eden', pkgs:['dev.eden.eden_emulator'], rx:/^eden( |$)/i, cons:['SWITCH'], pre:{ method:'view', act:'org.yuzu.yuzu_emu.activities.EmulationActivity' } },
+  { id:'azahar', name:'Azahar / Lime3DS', pkgs:['org.azahar_emu.azahar', 'io.github.lime3ds.android'], rx:/azahar|lime3ds|citra/i, cons:['N3DS'], pre:{ method:'open' } },
+  { id:'hakux', name:'hakuX', pkgs:['com.rfandango.haku_x'], rx:/haku/i, cons:['XBOX'], pre:{ method:'open' } },
+  { id:'x1box', name:'X1 BOX', pkgs:[], rx:/x1\s?box/i, cons:['XBOX'], pre:{ method:'open' } },
+  { id:'mupen', name:'Mupen64Plus FZ', pkgs:['org.mupen64plusae.v3.fzurita'], rx:/mupen64/i, cons:['N64'], pre:{ method:'open' } },
+  { id:'melon', name:'melonDS', pkgs:['me.magnum.melonds'], rx:/melonds/i, cons:['NDS'], pre:{ method:'open' } },
+  { id:'drastic', name:'DraStic', pkgs:['com.dsemu.drastic'], rx:/drastic/i, cons:['NDS'], pre:{ method:'open' } },
+  { id:'flycast', name:'Flycast', pkgs:['com.flycast.emulator'], rx:/flycast/i, cons:['DC'], pre:{ method:'open' } },
+  { id:'redream', name:'Redream', pkgs:['io.recompiled.redream'], rx:/redream/i, cons:['DC'], pre:{ method:'open' } },
+  { id:'yaba', name:'Yaba Sanshiro 2', pkgs:['org.devmiyax.yabasanshioro2'], rx:/yaba/i, cons:['SAT'], pre:{ method:'open' } },
+  { id:'aps3e', name:'aPS3e', pkgs:['aenu.aps3e'], rx:/aps3e/i, cons:['PS3'], pre:{ method:'open' } },
+  { id:'vita3k', name:'Vita3K', pkgs:['org.vita3k.emulator'], rx:/vita3k/i, cons:['VITA'], pre:{ method:'open' } },
+  { id:'winlator', name:'Winlator', pkgs:['com.winlator'], rx:/winlator/i, cons:['WINDOWS'], pre:{ method:'open' } },
+  { id:'retroarch', name:'RetroArch', pkgs:['com.retroarch', 'com.retroarch.aarch64', 'com.retroarch.ra32'], rx:/retroarch/i, cons:['NES', 'SNES', 'GB', 'GBC', 'GBA', 'GEN', 'SCD', 'GG', 'N64', 'SAT', 'DC', 'PS1', 'NDS'], pre:{ method:'open' } }
+];
+const METHODS = [
+  ['open', 'Solo abrir el emulador', 'No le manda el juego; lo eliges dentro del emulador'],
+  ['viewpath', 'Abrir el archivo del juego', 'Le manda la ruta normal del archivo (ej. PPSSPP)'],
+  ['view', 'Abrir el archivo con dirección autorizada', 'Le manda una dirección content:// (ej. Eden)'],
+  ['extra', 'Pasar la ruta como dato extra', 'Para NetherSX2, Dolphin, DuckStation y similares']
+];
+let CONSOLES = [];
+try { CONSOLES = JSON.parse(LS.getItem('gl_consoles') || '[]'); } catch(e) {}
+const cwE = k => CATALOG.find(x => x.key === k);
+const emuById = id => EMUS.find(e => e.id === id);
+const emusFor = key => EMUS.filter(e => e.cons.includes(key));
+const emuLabel = e => e ? e.name + (e.id === 'retroarch' ? '' : ' (Standalone)') : '';
+const normExts = t => [...new Set(String(t || '').toLowerCase().split(/[\s,;]+/).filter(Boolean).map(x => x[0] === '.' ? x : '.' + x))].join(',');
+function launchCfg(c){
+  const e = { force:true, package:c.pkg }; if (c.act) e.activity = c.act;
+  if (c.method === 'viewpath') { e.action = 'android.intent.action.VIEW'; e.data = true; }
+  else if (c.method === 'view') { e.action = 'android.intent.action.VIEW'; e.saf = true; }
+  else if (c.method === 'extra') { e.action = 'android.intent.action.MAIN'; e.extraKey = c.key2 || 'bootPath'; e.saf = !!c.safx; }
+  return e;
+}
+function applyConsoles(){
+  CONSOLES.forEach(c => {
+    PLATFORMS[c.key] = Object.assign({ color:'bg-slate-600' }, PLATFORMS[c.key] || {}, { name:c.name, code:c.tab });
+    EXTS[c.key] = c.exts; if (c.pkg) { PLAT_EMU[c.key] = c.pkg; EMU[c.key] = launchCfg(c); }
+    if (c.ss) SSYS[c.key] = c.ss; if (c.lib) LIBR[c.key] = c.lib;
+  });
+}
+applyConsoles();
+async function scanConsole(c){
+  if (!Launcher || !c.dir) return 0;
+  const r = await Launcher.scan({ path:c.dir, exts:c.exts }); let n = 0;
+  r.files.forEach(f => {
+    if (games.some(g => g.rom === f.path)) return;
+    const folder = f.path.substring(0, f.path.lastIndexOf('/'));
+    games.push({ id:'s' + Date.now() + '_' + (seq++), title:clean(f.name.replace(/\.[^.]+$/, '')).replace(/_+/g, ' '), type:'EMULATOR', platform:c.key, publisher:'—', year:'—', fav:false, played:false, g:['#1e3a8a','#111827'], desc:'ROM detectada en ' + folder, folder, pkg:c.pkg, rom:f.path, emu:c.name });
+    n++;
+  });
+  save(); render(); return n;
+}
+let cw = null;
+function openConsoleWizard(edit){
+  if (wizOn || introOn) return; closePanel();
+  cw = { step: edit ? 1 : 0, sub:'', key: edit ? edit.key : null, q:'', sort:'pop', aq:'', apps:null, loaded:false, icons:{}, emu: edit ? edit.emu || '' : '', emuName: edit ? edit.emuName || '' : '', custom: edit ? !!edit.custom : false,
+    pkg: edit ? edit.pkg : '', method: edit ? edit.method : 'open', act: edit ? edit.act || '' : '', key2: edit ? edit.key2 || '' : '', safx: edit ? !!edit.safx : false, tab: edit ? edit.tab : '', dir: edit ? edit.dir || '' : '', exts: edit ? edit.exts : '', msg:'' };
+  const m = $('modal'); m.classList.remove('hidden'); m.classList.add('flex'); m.style.alignItems = ''; sfx('ok');
+  cwLoadApps(); cwRender();
+}
+async function cwLoadApps(){
+  if (cw.apps !== null) return; cw.apps = [];
+  try { if (Launcher) cw.apps = (await Launcher.listApps()).apps || []; } catch(e) {}
+  cw.loaded = true;
+  if (cw.step === 1 && !cw.emu && !cw.pkg) cwDetect(true);
+  if ($('modal').querySelector('.cw')) cwRender();
+}
+const cwInstalled = e => (cw.apps || []).filter(a => e.pkgs.includes(a.pkg) || (e.rx && e.rx.test(a.name)));
+function cwUseEmu(e, pkg){
+  const p = e.pre || { method:'open' };
+  Object.assign(cw, { emu:e.id, emuName:'', pkg:pkg || '', method:p.method || 'open', act:p.act || '', key2:p.key2 || '', safx:!!p.safx, custom:false });
+}
+function cwDetect(auto){
+  for (const e of emusFor(cw.key)) { const inst = cwInstalled(e); if (inst.length) { cwUseEmu(e, inst[0].pkg); cw.msg = 'Detectado: ' + emuLabel(e) + ' (' + inst[0].pkg + ')'; return true; } }
+  const first = emusFor(cw.key)[0]; if (auto && first && !cw.emu) { cwUseEmu(first, ''); }
+  cw.msg = cw.loaded ? 'No encontré ningún emulador instalado para esta consola. Instala uno o elige otra app.' : ''; return false;
+}
+function cwPick(key){
+  const e = cwE(key), old = CONSOLES.find(c => c.key === key); cw.key = key; cw.sub = '';
+  if (old) Object.assign(cw, { tab:old.tab, exts:old.exts, dir:old.dir || '', pkg:old.pkg, emu:old.emu || '', emuName:old.emuName || '', custom:!!old.custom, method:old.method, act:old.act || '', key2:old.key2 || '', safx:!!old.safx });
+  else Object.assign(cw, { tab:e.code, exts:e.exts, dir:'', pkg:'', emu:'', emuName:'', custom:false, method:'open', act:'', key2:'', safx:false });
+}
+function cwList(){
+  const q = cw.q.toLowerCase(), L = CATALOG.filter(x => !q || (x.name + ' ' + x.maker + ' ' + x.code).toLowerCase().includes(q));
+  const row = x => { const have = CONSOLES.some(c => c.key === x.key); return `<button data-a="con:${x.key}" data-k="c${x.key}" class="cwr ${cw.key === x.key ? 'on' : ''}"><i class="rad ${cw.key === x.key ? 'on' : ''}"></i><span class="cwi">🎮</span><span class="cwt"><b>${x.name}</b><small>${x.year} | ${x.maker}${have ? ' | ya configurada' : (BUILTIN.has(x.key) ? ' | incluida' : '')}</small></span></button>`; };
+  if (!L.length) return '<p class="cwnote">Sin resultados.</p>';
+  if (cw.sort === 'az') return L.slice().sort((a, b) => a.name.localeCompare(b.name)).map(row).join('');
+  if (cw.sort === 'mk') return ['Nintendo', 'Sony', 'Microsoft', 'Sega', 'PC'].map(g => { const part = L.filter(x => x.maker === g); return part.length ? `<div class="cwg">${g === 'Microsoft' ? 'Consolas Xbox' : g === 'PC' ? 'Consolas PC' : 'Consolas ' + g}</div>` + part.map(row).join('') : ''; }).join('');
+  return L.map(row).join('');
+}
+function cwAppList(){
+  const q = cw.aq.toLowerCase();
+  if (!Launcher) return '<p class="cwnote">Abre el launcher dentro de la app Android para ver tus apps instaladas.</p>';
+  if (!cw.loaded) return '<p class="cwnote">Buscando apps instaladas…</p>';
+  const A = cw.apps.filter(a => !q || a.name.toLowerCase().includes(q) || a.pkg.toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 150);
+  return A.map(a => `<button data-a="app:${a.pkg}" data-k="a${a.pkg}" class="cwr ${cw.pkg === a.pkg ? 'on' : ''}"><i class="rad ${cw.pkg === a.pkg ? 'on' : ''}"></i>${cwIcon(a.pkg)}<span class="cwt"><b>${a.name}</b><small>${a.pkg}</small></span></button>`).join('') || '<p class="cwnote">Sin resultados.</p>';
+}
+function cwIcon(pkg){ const u = cw.icons[pkg]; if (u === undefined && pkg) cwLoadIcon(pkg); return u ? `<img class="cwimg" src="${u}">` : '<span class="cwi">⚙️</span>'; }
+function cwLoadIcon(pkg){
+  if (!Launcher || cw.icons[pkg] !== undefined) return; cw.icons[pkg] = null;
+  Launcher.appIcon({ package:pkg }).then(r => { cw.icons[pkg] = r.image; clearTimeout(cw.it); cw.it = setTimeout(() => { if (cw && $('modal').querySelector('.cw') && cw.step === 1) cwRender(); }, 150); }).catch(() => {});
+}
+function cwEmuName(){ return cw.emu === 'custom' ? (cw.emuName || cw.pkg || 'Otra app') : (cw.emu ? emuLabel(emuById(cw.emu)) : 'Sin elegir'); }
+function cwStep1(E){
+  const done = '<div class="cwn"><button data-a="sub:" data-k="done" class="cwp pri">Listo</button></div>';
+  if (cw.sub === 'emus') {
+    const list = emusFor(cw.key), cur = cw.pkg;
+    return `<div class="cwk"><span class="cwi">📲</span><b>Emuladores instalados</b><button data-a="sub:variants" data-k="chip" class="cwchip">${cwIcon(cur)}<span><b>${cwEmuName().replace(' (Standalone)', '')}</b><small>${cur || 'sin variante'}</small></span></button></div>` +
+      (list.map(e => { const inst = cwInstalled(e), on = cw.emu === e.id; return `<button data-a="emu:${e.id}" data-k="e${e.id}" class="cwr ${on ? 'on' : ''}"><i class="rad ${on ? 'on' : ''}"></i>${cwIcon(inst[0] ? inst[0].pkg : '')}<span class="cwt"><b>${emuLabel(e)}</b><small>${inst.length ? 'Instalado · ' + inst[0].pkg : 'No instalado'}</small></span></button>`; }).join('') || '<p class="cwnote">No conozco emuladores para esta consola. Usa “Otra app instalada”.</p>') +
+      `<button data-a="sub:apps" data-k="otra" class="cwr"><span class="cwi">📱</span><span class="cwt"><b>Otra app instalada…</b><small>Elige cualquier app de tu celular como emulador</small></span><span class="cwgo">›</span></button>` + done;
+  }
+  if (cw.sub === 'variants') {
+    const e = emuById(cw.emu), inst = e ? cwInstalled(e) : (cw.pkg ? [{ name:cw.emuName || cw.pkg, pkg:cw.pkg }] : []);
+    return `<div class="cwg">Variantes instaladas de ${cwEmuName()}</div>` + (inst.map(a => `<button data-a="var:${a.pkg}" data-k="v${a.pkg}" class="cwr ${cw.pkg === a.pkg ? 'on' : ''}"><i class="rad ${cw.pkg === a.pkg ? 'on' : ''}"></i>${cwIcon(a.pkg)}<span class="cwt"><b>${a.name}</b><small>${a.pkg}</small></span></button>`).join('') || '<p class="cwnote">No hay variantes instaladas de este emulador.</p>') +
+      `<div class="cwg">O escribe el paquete</div><input id="cwpkg" class="cwin" placeholder="ej. com.retroarch" value="${cw.pkg}">` + done;
+  }
+  if (cw.sub === 'apps') return `<div class="cwg">Apps instaladas</div><input id="cwaq" class="cwin" placeholder="🔍 Buscar entre tus apps" value="${cw.aq}"><div id="cwal">${cwAppList()}</div>` + done;
+  if (cw.sub === 'custom') {
+    return `<div class="cwg">Comando de inicio personalizado</div>` + METHODS.map(m => `<button data-a="meth:${m[0]}" data-k="m${m[0]}" class="cwr ${cw.method === m[0] ? 'on' : ''}"><i class="rad ${cw.method === m[0] ? 'on' : ''}"></i><span class="cwt"><b>${m[1]}</b><small>${m[2]}</small></span></button>`).join('') +
+      (cw.method === 'open' ? '' : `<input id="cwact" class="cwin" placeholder="Actividad del emulador (opcional)" value="${cw.act}">`) +
+      (cw.method === 'extra' ? `<input id="cwkey2" class="cwin" placeholder="Nombre del dato extra (ej. bootPath)" value="${cw.key2}"><button data-a="safx" data-k="safx" class="cwr ${cw.safx ? 'on' : ''}"><i class="rad ${cw.safx ? 'on' : ''}"></i><span class="cwt"><b>Usar dirección autorizada (content://)</b><small>Necesaria en NetherSX2 y AetherSX2</small></span></button>` : '') +
+      `<button data-a="reset" data-k="reset" class="cwr"><span class="cwi">↩️</span><span class="cwt"><b>Restablecer al comando del emulador</b><small>Usa los datos que ya conozco para ${cwEmuName()}</small></span></button>` + done;
+  }
+  const row = (ic, t, sub, a) => `<button data-a="${a}" data-k="${a}" class="cwr"><span class="cwi">${ic}</span><span class="cwt"><b>${t}</b><small>${sub}</small></span><span class="cwgo">›</span></button>`;
+  return `<div class="cwg">Emulador para ${E.name}</div>` +
+    row('📲', 'Detectar emulador instalado', 'Busca en tu celular el emulador de esta consola y lo elige por ti.', 'detect') +
+    row('⚙️', 'Elegir emulador', cwEmuName(), 'sub:emus') +
+    row('▦', 'Elegir variante de emulador', cw.pkg || 'Ninguna instalada', 'sub:variants') +
+    row('⌨️', 'Comando de inicio personalizado', cw.custom ? 'Personalizado' : 'Usando el comando del emulador seleccionado', 'sub:custom') +
+    `<p class="cwnote">${cw.msg || ''}</p>` + `<div class="cwn"><button data-a="prev" data-k="prev" class="cwp">Anterior</button><button data-a="next" data-k="next" class="cwp pri">Siguiente</button></div>`;
+}
+function cwRender(){
+  const keep = mfCur && mfCur.dataset ? mfCur.dataset.k : null, E = cw.key ? cwE(cw.key) : null;
+  const side = [['🎮', 'Consola'], ['⚙️', 'Emulador'], ['🎛️', 'Personalizar'], ['📄', 'Resumen']].map((s, i) => `<button data-a="step:${i}" data-k="s${i}" class="cwb ${cw.step === i ? 'on' : ''}"><span>${s[0]}</span><span>${s[1]}${i === 0 && E ? `<small>${E.name}</small>` : ''}</span></button>`).join('');
+  const nav = (back, next, nextLabel, ok) => `<div class="cwn">${back ? '<button data-a="prev" data-k="prev" class="cwp">Anterior</button>' : ''}<button data-a="${next}" data-k="next" class="cwp pri" ${ok === false ? 'disabled' : ''}>${nextLabel}</button></div>`;
+  let body = '';
+  if (cw.step === 0) {
+    body = `<input id="cwq" class="cwin" placeholder="🔍 Buscar consolas" value="${cw.q}"><div class="cwg">Ordenar por</div>` +
+      [['pop', '⭐', 'Populares primero', 'Explora consolas ordenadas por popularidad'], ['az', 'AZ', 'Alfabético', 'Explora consolas de la A a la Z'], ['mk', '🏭', 'Agrupar por fabricante', 'Explora consolas por fabricante']].map(o => `<button data-a="sort:${o[0]}" data-k="o${o[0]}" class="cwr ${cw.sort === o[0] ? 'on' : ''}"><i class="rad ${cw.sort === o[0] ? 'on' : ''}"></i><span class="cwi">${o[1]}</span><span class="cwt"><b>${o[2]}</b><small>${o[3]}</small></span></button>`).join('') +
+      `<div id="cwl">${cwList()}</div>` + nav(false, 'next', 'Siguiente', !!cw.key);
+  } else if (!E) { cw.step = 0; return cwRender(); }
+  else if (cw.step === 1) body = cwStep1(E);
+  else if (cw.step === 2) {
+    body = `<div class="cwg">Nombre de pestaña</div><input id="cwtab" class="cwin" maxlength="14" value="${cw.tab}">
+      <div class="cwg">Directorio de ROM</div><button data-a="pick" data-k="pick" class="cwr"><span class="cwi">📂</span><span class="cwt"><b>${cw.dir ? cw.dir : 'Elegir carpeta de juegos'}</b><small>${cw.dir ? 'Toca para cambiarla' : 'Nada configurado · el launcher agregará los juegos que encuentre'}</small></span></button>
+      <div class="cwg">Extensiones de archivo</div><input id="cwexts" class="cwin" value="${cw.exts}"><p class="cwnote">Separadas por coma. Solo se agregarán archivos con estas extensiones.</p>` + nav(true, 'next', 'Siguiente');
+  } else {
+    const kv = (ic, k, v) => `<div class="cwk"><span class="cwi">${ic}</span><b>${k}</b><em>${v}</em></div>`;
+    body = `<div class="cwg">Resumen</div>` + kv('🎮', 'Consola', E.name) + kv('⚙️', 'Emulador', cwEmuName()) + kv('▦', 'Variante de emulador', cw.pkg || 'Ninguna') +
+      kv('⌨️', 'Comando de inicio personalizado', cw.custom ? 'Personalizado' : 'Usando el comando del emulador seleccionado') + kv('✏️', 'Nombre de pestaña', cw.tab || E.code) + kv('📂', 'Directorios de ROM', cw.dir || 'Nada configurado') +
+      `<p class="cwnote">${cw.msg || ''}</p>` + nav(true, 'save', CONSOLES.some(c => c.key === cw.key) ? 'Guardar cambios' : 'Agregar consola');
+  }
+  $('modal').innerHTML = `<div class="cw"><div class="cws">${side}</div><div class="cwm no-scrollbar">${body}</div><button data-a="close" data-k="x" class="cwx" title="Cerrar">✕</button></div>`;
+  const el = keep ? $('modal').querySelector('[data-k="' + keep + '"]') : null; if (el) mfMark(el);
+}
+function cwStore(){ const v = id => $(id) ? $(id).value : null; ['cwtab:tab', 'cwexts:exts', 'cwact:act', 'cwkey2:key2', 'cwpkg:pkg'].forEach(p => { const [id, k] = p.split(':'), x = v(id); if (x !== null) cw[k] = x; }); }
+function cwNext(){
+  cwStore();
+  if (cw.step === 0 && !cw.key) return;
+  if (cw.step === 1 && !cw.pkg.trim()) { cw.msg = 'Elige un emulador instalado, o instala uno y vuelve a tocar “Detectar emulador instalado”.'; return cwRender(); }
+  cw.msg = ''; cw.step++; cw.sub = ''; sfx('move'); if (cw.step === 1) { cwLoadApps(); if (cw.loaded && !cw.emu && !cw.pkg) cwDetect(true); } cwRender();
+}
+async function cwSave(){
+  cwStore(); const E = cwE(cw.key);
+  const c = { key:cw.key, name:E.name, tab:(cw.tab || E.code).trim().slice(0, 14), exts:normExts(cw.exts || E.exts), pkg:cw.pkg.trim(), emu:cw.emu, emuName:cw.emuName, custom:cw.custom, method:cw.method, act:cw.act.trim(), key2:cw.key2.trim(), safx:!!cw.safx, dir:cw.dir, ss:E.ss, lib:E.lib };
+  const i = CONSOLES.findIndex(x => x.key === c.key); if (i >= 0) CONSOLES[i] = c; else CONSOLES.push(c);
+  LS.setItem('gl_consoles', JSON.stringify(CONSOLES)); applyConsoles();
+  games.filter(g => g.platform === c.key).forEach(g => { g.pkg = c.pkg; });
+  cw.msg = 'Guardando…'; cwRender(); let n = 0;
+  try { n = await scanConsole(c); } catch(e) { toast('⚠️ ' + (e.message || e)); }
+  save(); closeModal(); render(); toast('✅ ' + c.tab + (i >= 0 ? ' actualizada' : ' agregada') + (c.dir ? ' · ' + n + ' juego(s) nuevos' : ''));
+}
+document.addEventListener('click', e => {
+  if (!cw || !modalOpen() || !$('modal').querySelector('.cw')) return;
+  const b = e.target.closest('[data-a]'); if (!b) return; const ix = b.dataset.a.indexOf(':'), a = ix < 0 ? b.dataset.a : b.dataset.a.slice(0, ix), v = ix < 0 ? '' : b.dataset.a.slice(ix + 1); cwStore();
+  if (a === 'close') closeModal();
+  else if (a === 'step') { if (+v === 0 || cw.key) { cw.step = +v; cw.sub = ''; if (cw.step === 1) { cwLoadApps(); if (cw.loaded && !cw.emu && !cw.pkg) cwDetect(true); } cwRender(); sfx('move'); } }
+  else if (a === 'con') { cwPick(v); sfx('move'); cwRender(); }
+  else if (a === 'sort') { cw.sort = v; cwRender(); }
+  else if (a === 'sub') { cw.sub = v; if (v === 'emus' || v === 'variants') (cw.apps || []).forEach(x => { if (cw.pkg === x.pkg) cwLoadIcon(x.pkg); }); cwRender(); }
+  else if (a === 'detect') { cw.sub = ''; if (!cw.loaded) cw.msg = 'Todavía estoy buscando tus apps…'; else cwDetect(false); cwRender(); }
+  else if (a === 'emu') { const em = emuById(v), inst = cwInstalled(em); cwUseEmu(em, inst.length ? inst[0].pkg : ''); cw.msg = inst.length ? '' : 'Ese emulador no está instalado en tu celular.'; cwRender(); }
+  else if (a === 'var') { cw.pkg = v; cwRender(); }
+  else if (a === 'app') { const ap = cw.apps.find(x => x.pkg === v); Object.assign(cw, { emu:'custom', emuName:ap ? ap.name : v, pkg:v, method:'open', act:'', key2:'', safx:false, custom:false, sub:'' }); cwRender(); }
+  else if (a === 'meth') { cw.method = v; cw.custom = true; cwRender(); }
+  else if (a === 'safx') { cw.safx = !cw.safx; cw.custom = true; cwRender(); }
+  else if (a === 'reset') { const em = emuById(cw.emu); if (em) cwUseEmu(em, cw.pkg); else Object.assign(cw, { method:'open', act:'', key2:'', safx:false, custom:false }); cwRender(); }
+  else if (a === 'prev') { cw.step = Math.max(0, cw.step - 1); cw.sub = ''; cw.msg = ''; cwRender(); }
+  else if (a === 'next') cwNext();
+  else if (a === 'save') cwSave();
+  else if (a === 'pick') { (async () => { try { const r = await Launcher.pickFolder(); if (r && r.path) { cw.dir = r.path; cwRender(); } } catch(err) { if (err.message !== 'Cancelado') toast('⚠️ ' + (err.message || err)); } })(); }
+});
+document.addEventListener('input', e => {
+  if (!cw || !$('modal').querySelector('.cw')) return;
+  if (e.target.id === 'cwq') { cw.q = e.target.value; $('cwl').innerHTML = cwList(); }
+  else if (e.target.id === 'cwaq') { cw.aq = e.target.value; $('cwal').innerHTML = cwAppList(); }
+  else if (e.target.id === 'cwpkg') { cw.pkg = e.target.value; }
+  else if (e.target.id === 'cwact' || e.target.id === 'cwkey2') { cw.custom = true; }
+});
+function openMyConsoles(){
+  openPanel('Mis consolas', () => CONSOLES.length ? CONSOLES.map(c => ({ i:'🎮', t:c.tab + ' · ' + c.name, s:games.filter(g => g.platform === c.key).length + ' juegos · ' + (c.pkg || 'sin emulador'), go:true, keep:true, f:() => openConsoleOptions(c) })) : [{ i:'➕', t:'Aún no agregaste consolas', s:'Usa “Agregar consola” en el menú principal', keep:true }]);
+}
+function openConsoleOptions(c){
+  openPanel(c.tab, () => [
+    { i:'✏️', t:'Editar', s:'Emulador, carpeta y nombre', f:() => openConsoleWizard(c) },
+    { i:'🔄', t:'Re-escanear carpeta', s:c.dir || 'Sin carpeta de ROM', keep:true, f:async () => { try { toast('🔄 Escaneando…'); const n = await scanConsole(c); toast('✅ ' + n + ' juego(s) nuevos'); } catch(e) { toast('⚠️ ' + (e.message || e)); } } },
+    { i:'🗑️', t:'Quitar consola', s:BUILTIN.has(c.key) ? 'Vuelve a la configuración original (tus juegos se quedan)' : 'Quita la consola y sus juegos de la biblioteca', danger:true, f:() => { if (confirm('¿Quitar ' + c.tab + '?')) removeConsole(c); } }
+  ]);
+}
+function removeConsole(c){
+  CONSOLES = CONSOLES.filter(x => x.key !== c.key); LS.setItem('gl_consoles', JSON.stringify(CONSOLES));
+  const builtin = BUILTIN.has(c.key);
+  if (!builtin) { for (let i = games.length - 1; i >= 0; i--) if (games[i].platform === c.key) games.splice(i, 1); delete PLATFORMS[c.key]; delete EXTS[c.key]; delete PLAT_EMU[c.key]; delete EMU[c.key]; }
+  save(); if (plat === c.key) plat = 'ALL'; idx = 0; render(); toast('Consola quitada'); if (builtin) setTimeout(() => location.reload(), 700);
 }
 
 loadBuf('scroll'); loadBuf('sel'); if (wizOn) holdIntro(); else startIntroAudio();
