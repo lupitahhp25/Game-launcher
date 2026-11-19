@@ -431,6 +431,19 @@
   .th-neon #pmenu.pm-close .ppanel { animation:nout .26s ease-in both; }
   @keyframes nout { to{opacity:0;transform:scaleY(.04) scaleX(1.05)} }
   .th-neon #modal > div { border:2px solid #ff3df2 !important; box-shadow:0 0 3vh rgba(255,61,242,.5); }
+  #plats:empty { display:none; }
+  .backpill { cursor:pointer; padding:.3em 1.1em; border:1px solid rgba(255,255,255,.45); border-radius:9999px; color:#fff; letter-spacing:.1em; background:rgba(255,255,255,.08); }
+  .ctile { border:.55vh solid var(--cc); box-sizing:border-box; display:flex; align-items:center; justify-content:center; }
+  .ctile::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.1),transparent 62%); pointer-events:none; }
+  .ctile .clogo { width:62%; height:62%; display:flex; align-items:center; justify-content:center; filter:drop-shadow(0 .5vh 1vh rgba(0,0,0,.55)); }
+  .ctile .clogo svg { width:100%; height:100%; }
+  .ctile.sel { box-shadow:0 0 4.5vh var(--cc),0 0 0 .3vh var(--cc),0 8px 30px rgba(0,0,0,.55); }
+  .ccount { position:absolute; right:6%; top:6%; min-width:3.2vh; height:3.2vh; padding:0 .8vh; border-radius:9999px; background:rgba(0,0,0,.6); border:1px solid var(--cc); display:flex; align-items:center; justify-content:center; font-size:clamp(.55rem,1.9vh,.75rem); font-weight:800; z-index:1; }
+  .th-recomp .tile.ctile { height:calc(var(--S)*.74); }
+  .cons-title { align-self:stretch; margin-left:-8vw; text-align:center; font-size:clamp(1.3rem,min(8vh,6vw),3.2rem); font-weight:800; letter-spacing:-.01em; text-shadow:0 .4vh 2vh rgba(0,0,0,.7); animation:rcin .45s ease-out both; }
+  .th-neon .cons-title { text-transform:uppercase; letter-spacing:.1em; color:#fff; text-shadow:0 0 1.2vh #ff3df2,0 0 3vh #ff3df2; }
+  #row.rv { animation:rowv .5s cubic-bezier(.2,.9,.25,1) both; }
+  @keyframes rowv { from{opacity:0;transform:translateY(3vh) scale(.96)} to{opacity:1;transform:none} }
 </style>
 </head>
 <body>
@@ -586,14 +599,15 @@ try { const sv = JSON.parse(LS.getItem('gl_games') || 'null'); const keep = Arra
 function save(){ try { LS.setItem('gl_games', JSON.stringify(games)); } catch(e) {} }
 let cat = 'ALL', plat = 'ALL', idx = 0, q = '', autoScroll = false, autoT = 0, lastTick = 0, theme = 'ps5', mfCur = null, lastSt = null, lastPadKey = '', lastPad = null, padT = 0;
 const $ = id => document.getElementById(id);
-const list = () => games.filter(g =>
+const list = () => consoleMode() ? consoleItems() : gameList();
+const gameList = () => games.filter(g =>
   !(cat==='NATIVE APPS' && g.type!=='NATIVE') && !(cat==='EMULATORS' && g.type!=='EMULATOR') &&
   !(cat==='FAVORITES' && !g.fav) && !(cat==='RECENTLY PLAYED' && !g.played) && !(plat!=='ALL' && g.platform!==plat) && (!q || (g.title+' '+g.platform).toLowerCase().includes(q)));
 const clean = t => String(t).replace(/(\.(xiso|iso|cso|chd|bin|rvz|gcm|nsp|xci|3ds|cia|gba|pbp|cue|wbfs|gcz|nes|sfc|smc|n64|z64|v64|gb|gbc|nds|md|gen|smd|gg|cdi|gdi|vpk|xex|wua|wud|wux|cxi|pkg))+$/i, '');
 const grad = g => `linear-gradient(135deg, ${g[0]}, ${g[1]})`;
 
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.remove('hidden'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.add('hidden'),2500); }
-function shiftCat(d){ sfx('cat'); cat = CATS[(CATS.indexOf(cat)+d+CATS.length)%CATS.length]; idx=0; render(); }
+function shiftCat(d){ sfx('cat'); plat = 'ALL'; cat = CATS[(CATS.indexOf(cat)+d+CATS.length)%CATS.length]; idx=0; render(); }
 
 const CAT_SEC = { 'ALL':'Tu biblioteca', 'NATIVE APPS':'Tus apps', 'EMULATORS':'Tus emuladores', 'FAVORITES':'Tus favoritos', 'RECENTLY PLAYED':'Seguir jugando' };
 const CAT_LABEL = {'ALL':'Todos','NATIVE APPS':'Apps','EMULATORS':'Emuladores','FAVORITES':'Favoritos','RECENTLY PLAYED':'Recientes'};
@@ -607,7 +621,7 @@ function render(soft, scrollTo){
   const cur = gs[idx];
   if (!soft) {
     $('cats').innerHTML = CATS.map(c => `<button data-c="${c}" class="cat ${c===cat?'on':''}">${CAT_LABEL[c]}</button>`).join('');
-    $('plats').innerHTML = [['ALL','Todos']].concat(Object.entries(PLATFORMS).filter(([k]) => games.some(g => g.platform === k)).map(([k,p]) => [k, p.code])).map(([k,t]) => `<button data-p="${k}" class="plat ${plat===k?'on':''}">${t}</button>`).join('');
+    $('plats').innerHTML = (cat === 'EMULATORS' && plat !== 'ALL') ? `<button data-back="1" class="plat on backpill">◀ Consolas</button><span class="plat">${(PLATFORMS[plat] || {}).name || plat} · ${games.filter(g => g.type === 'EMULATOR' && g.platform === plat).length} juegos</span>` : '';
   }
   const mode = cur ? bgMode(cur) : 'shot';
   const art = !cur ? '' : (mode === 'cover' && cur.img ? cur.img : (cur.wall || ''));
@@ -627,10 +641,13 @@ function render(soft, scrollTo){
   $('hero').innerHTML = '';
   const p = PLATFORMS[cur.platform] || PLATFORMS.ANDROID;
   if (theme === 'recomp') {
-    $('hero').innerHTML = `<h1 class="rc-title">${clean(cur.title)}</h1><p class="rc-sub"><span>◎</span>${p.name} · ${cur.type === 'NATIVE' ? 'App de Android' : (cur.emu || 'Emulador')}</p><div class="rc-btns"><button id="rcPlay" class="rc-btn pri"><i>A</i>Jugar</button><button id="rcOpt" class="rc-btn"><i>Y</i>Opciones del juego</button></div><p class="rc-sec">${CAT_SEC[cat] || 'Tu biblioteca'}</p>`;
-    $('rcPlay').onclick = () => openModal(cur, 'launch'); $('rcOpt').onclick = openGameMenu;
+    $('hero').innerHTML = `<h1 class="rc-title">${clean(cur.title)}</h1><p class="rc-sub"><span>◎</span>${cur.type === 'CONSOLE' ? cur.count + ' juego(s)' : p.name + ' · ' + (cur.type === 'NATIVE' ? 'App de Android' : (cur.emu || 'Emulador'))}</p><div class="rc-btns"><button id="rcPlay" class="rc-btn pri"><i>A</i>${cur.type === 'CONSOLE' ? 'Abrir juegos' : 'Jugar'}</button><button id="rcOpt" class="rc-btn"><i>Y</i>${cur.type === 'CONSOLE' ? 'Ajustes de la consola' : 'Opciones del juego'}</button></div><p class="rc-sec">${CAT_SEC[cat] || 'Tu biblioteca'}</p>`;
+    $('rcPlay').onclick = () => activate(cur); $('rcOpt').onclick = openGameMenu;
     $('lbl').innerHTML = '<span class="rc-h"><i>A</i>Seleccionar</span><span class="rc-h"><i>START</i>Opciones</span><span class="rc-h"><i>Y</i>Menú</span><span class="rc-h"><i>LB</i><i>RB</i>Secciones</span>';
-  } else $('lbl').innerHTML = `<span class="lblp">${p.code}</span><span class="lblt">${clean(cur.title)}</span>`;
+  } else {
+    $('lbl').innerHTML = cur.type === 'CONSOLE' ? `<span class="lblp">${p.code}</span><span class="lblt">${cur.count} juego(s)</span>` : `<span class="lblp">${p.code}</span><span class="lblt">${clean(cur.title)}</span>`;
+    if (cur.type === 'CONSOLE') $('hero').innerHTML = `<div class="cons-title">${cur.title}</div>`;
+  }
   const ic = t => `<span class="w-6 text-center">${t}</span>`;
   $('opts').innerHTML = `<p class="px-4 pt-2 pb-1 text-[11px] text-white/50 truncate">${clean(cur.title)}</p>
     <button id="play" class="qrow">${ic('▶')}Jugar</button>
@@ -639,7 +656,7 @@ function render(soft, scrollTo){
     <button id="scrape" class="qrow">${ic('🔄')}Carátulas y datos</button>
     <button id="bgm" class="qrow">${ic('🎞️')}Fondo: ${MODE_LABEL[mode]}</button>
     <button id="del" class="qrow !text-red-300">${ic('🗑️')}Quitar de la biblioteca</button>`;
-  const rowHtml = () => gs.map((g,i) => `<div data-i="${i}" class="tile ${i===idx?'sel':''} ${Math.abs(i-idx)>4?'far':''}" style="--o:${i-idx};--ao:${Math.abs(i-idx)};--sg:${Math.sign(i-idx)};background:${g.img?`url('${g.img}') center/cover, `:''}${grad(g.g)}">${g.img?'':`<div class="tcap"><span class="tt">${clean(g.title)}</span></div>`}${g.type==='NATIVE'?'':'<span class="disc"></span>'}</div>`).join('');
+  const rowHtml = () => gs.map((g,i) => g.type === 'CONSOLE' ? consoleTile(g, i) : `<div data-i="${i}" class="tile ${i===idx?'sel':''} ${Math.abs(i-idx)>4?'far':''}" style="--o:${i-idx};--ao:${Math.abs(i-idx)};--sg:${Math.sign(i-idx)};background:${g.img?`url('${g.img}') center/cover, `:''}${grad(g.g)}">${g.img?'':`<div class="tcap"><span class="tt">${clean(g.title)}</span></div>`}${g.type==='NATIVE'?'':'<span class="disc"></span>'}</div>`).join('');
   const row = $('row');
   if (!soft || row.children.length !== gs.length) { row.innerHTML = rowHtml(); soft = false; }
   else [...row.children].forEach((t, i) => { const o = i - idx; t.classList.toggle('sel', o === 0); t.classList.toggle('far', Math.abs(o) > 4); t.style.setProperty('--o', o); t.style.setProperty('--ao', Math.abs(o)); t.style.setProperty('--sg', Math.sign(o)); });
@@ -650,7 +667,7 @@ function render(soft, scrollTo){
     if (!soft) row.scrollTo({ left, behavior:'instant' });
     else if (scrollTo !== false) { autoScroll = true; row.scrollTo({ left, behavior:'smooth' }); clearTimeout(autoT); autoT = setTimeout(() => autoScroll = false, 500); }
   }
-  $('play').onclick = () => openModal(cur,'launch');
+  $('play').onclick = () => activate(cur);
   $('ai').onclick = () => openModal(cur,'ai');
   $('scrape').onclick = openSS;
   $('bgm').onclick = () => cycleBg(cur);
@@ -683,9 +700,10 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#optbtn')) { const o = $('opts'); if (o) o.classList.add('hidden'); }
   if ((!e.target.closest('#menubtn') && !e.target.closest('#qmenu') && !e.target.closest('#topbtn')) || e.target.closest('.qrow')) $('qmenu').classList.add('hidden');
   const c = e.target.closest('[data-c]'), p = e.target.closest('[data-p]'), i = e.target.closest('[data-i]');
-  if (c){ sfx('cat'); cat=c.dataset.c; idx=0; render(); }
+  if (c){ sfx('cat'); plat='ALL'; cat=c.dataset.c; idx=0; render(); }
   else if (p){ sfx('cat'); plat=p.dataset.p; idx=0; render(); }
-  else if (i){ const k = +i.dataset.i; if (k === idx) { const g = list()[idx]; if (g) openModal(g, 'launch'); } else setIdx(k); }
+  else if (e.target.closest('[data-back]')) { leaveConsole(); }
+  else if (i){ const k = +i.dataset.i; if (k === idx) activate(list()[idx]); else setIdx(k); }
 });
 $('l1').onclick = () => shiftCat(-1);
 $('r1').onclick = () => shiftCat(1);
@@ -705,7 +723,8 @@ document.addEventListener('keydown', e => {
   else if (e.key==='ArrowLeft'){ setIdx(idx-1); }
   else if (e.key==='q'||e.key==='Q') shiftCat(-1);
   else if (e.key==='e'||e.key==='E') shiftCat(1);
-  else if (e.key==='Enter'){ const g=list()[idx]; if (g) openModal(g,'launch'); }
+  else if (e.key==='Enter'){ activate(list()[idx]); }
+  else if (e.key==='Escape' || e.key==='Backspace') { leaveConsole(); }
   else if (e.key==='a'||e.key==='A'){ openPadsMenu(); }
   else if (e.key==='s'||e.key==='S'){ const g=list()[idx]; if (g) openSS(); }
 });
@@ -754,9 +773,10 @@ function pad(){
     else if (open) { if (!gpUiNav(gp)) act = false; }
     else if (b(15) || x > .4) { setIdx(idx+1); }
     else if (b(14) || x < -.4) { setIdx(idx-1); }
+    else if (b(1)) { if (!leaveConsole()) act = false; }
     else if (b(4)) shiftCat(-1);
     else if (b(5)) shiftCat(1);
-    else if (b(0)) { const g = list()[idx]; if (g) openModal(g,'launch'); }
+    else if (b(0)) { activate(list()[idx]); }
     else if (b(3)) { openMainMenu(); }
     else if (b(8) || b(16)) { openPadsMenu(); }
     else if (b(9)) { openGameMenu(); }
@@ -907,7 +927,7 @@ function readSS(){
 }
 async function runScrape(items){
   if (scraping) { say('Ya hay un scrapeo en curso (' + scrapeDone + '/' + scrapeTotal + '). Espera o toca “Detener”.'); return; }
-  readSS(); items = items.filter(g => g.type !== 'NATIVE');
+  readSS(); items = items.filter(g => g.type === 'EMULATOR');
   if (!items.length) { say('No hay juegos de emulador para scrapear.'); return; }
   scraping = true; scrapeCancel = false; scrapeDone = 0; scrapeTotal = items.length; missVid = 0;
   let ok = 0, lastErr = null, next = 0; const slow = hasSS();
@@ -1440,6 +1460,7 @@ function openMainMenu(){
 function openGameMenu(){
   if (wizOn || introOn) return;
   const g = list()[idx]; if (!g) { toast('No hay ningún juego seleccionado'); return; }
+  if (g.type === 'CONSOLE') { openConsoleMenu(g); return; }
   pstack = [];
   openPanel(clean(g.title), () => [
     { i:'▶', t:'Jugar', s:'Abrir con ' + (g.emu || 'su emulador'), f:() => $('play').click() },
@@ -1972,6 +1993,59 @@ function openThemeMenu(){
   row.addEventListener('pointerdown', e => { if (theme === 'neon') sx = e.clientX; });
   row.addEventListener('pointerup', e => { if (theme !== 'neon' || sx === null) return; const dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) setIdx(idx + (dx < 0 ? 1 : -1)); });
 })();
+
+
+// ===== Vista de consolas dentro de "Emuladores" =====
+const CCOL = { PS2:'#3b6cff', PS1:'#b0b4c0', PSP:'#6f7cff', PS3:'#8a92a6', VITA:'#2ea0ff', SWITCH:'#ff3b30', GAMECUBE:'#8b6cff', WII:'#4cc9ff', WIIU:'#00a8e8', N64:'#34c759', SNES:'#b388ff', NES:'#ff453a', GB:'#9bbc0f', GBC:'#ff9f0a', GBA:'#8e5bff', NDS:'#d8d8e4', N3DS:'#ff375f', XBOX:'#8fd400', X360:'#9bf00b', GEN:'#1a6bff', SCD:'#4a90ff', SAT:'#5a7bff', DC:'#ff8a1a', GG:'#3a7bff', WINDOWS:'#00a4ef', ANDROID:'#3ddc84' };
+const ccol = k => CCOL[k] || '#8aa0ff';
+const mixc = (h, t) => { const n = parseInt(h.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255, k = [13, 18, 24]; return '#' + [r, g, b].map((v, i) => Math.round(k[i] + (v - k[i]) * t).toString(16).padStart(2, '0')).join(''); };
+const lt = (t, size, fill, y, ls) => `<text x="50" y="${y || 60}" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="${size}" fill="${fill}" letter-spacing="${ls || 0}">${t}</text>`;
+const LOGOS = {
+  SWITCH: '<path d="M30 14h12a8 8 0 0 1 8 8v56a8 8 0 0 1-8 8H30A22 22 0 0 1 8 64V36a22 22 0 0 1 22-22z" fill="none" stroke="#ff4338" stroke-width="7"/><circle cx="29" cy="38" r="7" fill="#ff4338"/><path d="M58 14h12a22 22 0 0 1 22 22v28a22 22 0 0 1-22 22H58a8 8 0 0 1-8-8V22a8 8 0 0 1 8-8z" fill="#ff4338"/><circle cx="71" cy="62" r="7" fill="#101820"/>',
+  XBOX: '<defs><linearGradient id="gxx" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b6f34a"/><stop offset="1" stop-color="#2c8a14"/></linearGradient></defs><path d="M14 16L46 50L14 84H30L50 61L70 84H86L54 50L86 16H70L50 39L30 16z" fill="url(#gxx)"/>',
+  X360: '<circle cx="50" cy="50" r="40" fill="none" stroke="#9bf00b" stroke-width="7"/>' + lt('360', 34, '#9bf00b', 62),
+  GAMECUBE: '<polygon points="50,10 86,30 86,70 50,90 14,70 14,30" fill="none" stroke="#8b6cff" stroke-width="7" stroke-linejoin="round"/><polygon points="50,28 68,38 68,62 50,72 32,62 32,38" fill="#8b6cff"/>',
+  WII: lt('Wii', 46, '#4cc9ff', 64), WIIU: lt('Wii U', 32, '#00a8e8', 62), N64: lt('N64', 38, '#34c759', 62),
+  SNES: '<circle cx="50" cy="26" r="13" fill="#4a90ff"/><circle cx="50" cy="74" r="13" fill="#ffd60a"/><circle cx="26" cy="50" r="13" fill="#34c759"/><circle cx="74" cy="50" r="13" fill="#ff453a"/>',
+  NES: '<rect x="8" y="28" width="84" height="44" rx="6" fill="#ff453a"/>' + lt('NES', 28, '#fff', 58),
+  GB: lt('GB', 44, '#b8d84a', 62), GBC: lt('GBC', 34, '#ff9f0a', 60), GBA: lt('GBA', 36, '#a98bff', 60), NDS: lt('DS', 52, '#e8e8f0', 68), N3DS: lt('3DS', 40, '#ff375f', 62),
+  PS1: lt('PS1', 40, '#c4c8d4', 62), PS2: lt('PS2', 40, '#5b8cff', 62), PS3: lt('PS3', 40, '#b8bfd0', 62), PSP: lt('PSP', 38, '#8a98ff', 62), VITA: lt('VITA', 30, '#35b0ff', 60),
+  GEN: lt('SEGA', 34, '#2d7bff', 48) + lt('GENESIS', 13, '#e8eeff', 70, 1), SCD: lt('SEGA', 30, '#4a90ff', 46) + lt('CD', 30, '#e8eeff', 78), SAT: lt('SATURN', 21, '#6d8bff', 58), GG: lt('GG', 48, '#3a7bff', 66),
+  DC: '<path d="M50 50m-4 0a4 4 0 1 1 8 0a12 12 0 1 1-24 0a22 22 0 1 1 44 0a32 32 0 1 1-64 0" fill="none" stroke="#ff8a1a" stroke-width="7" stroke-linecap="round"/>',
+  WINDOWS: '<path d="M12 22l34-5v31H12zM50 16l38-6v38H50zM12 52h34v31l-34-5zM50 52h38v40l-38-6z" fill="#00a4ef"/>'
+};
+const logoSvg = k => `<svg viewBox="0 0 100 100">${LOGOS[k] || lt((PLATFORMS[k] && PLATFORMS[k].code) || k, 26, ccol(k), 58)}</svg>`;
+function consoleMode(){ return cat === 'EMULATORS' && plat === 'ALL' && !q; }
+function consoleItems(){
+  const cnt = {}; games.forEach(g => { if (g.type === 'EMULATOR') cnt[g.platform] = (cnt[g.platform] || 0) + 1; });
+  CONSOLES.forEach(c => { if (!(c.key in cnt)) cnt[c.key] = 0; });
+  return Object.keys(cnt).filter(k => PLATFORMS[k]).sort((a, b) => cnt[b] - cnt[a] || PLATFORMS[a].name.localeCompare(PLATFORMS[b].name))
+    .map(k => ({ id:'c_' + k, type:'CONSOLE', platform:k, title:PLATFORMS[k].name, count:cnt[k], fav:false, g:[mixc(ccol(k), .3), mixc(ccol(k), .1)] }));
+}
+function consoleTile(g, i){
+  const o = i - idx;
+  return `<div data-i="${i}" class="tile ctile ${o === 0 ? 'sel' : ''} ${Math.abs(o) > 4 ? 'far' : ''}" style="--cc:${ccol(g.platform)};--o:${o};--ao:${Math.abs(o)};--sg:${Math.sign(o)};background:${grad(g.g)}"><div class="clogo">${logoSvg(g.platform)}</div><span class="ccount">${g.count}</span></div>`;
+}
+function rowAnim(){ const r = $('row'); r.classList.remove('rv'); void r.offsetWidth; r.classList.add('rv'); setTimeout(() => r.classList.remove('rv'), 600); }
+function activate(g){ if (!g) return; if (g.type === 'CONSOLE') enterConsole(g.platform); else openModal(g, 'launch'); }
+function enterConsole(k){ sfx('ok'); plat = k; idx = 0; render(); rowAnim(); }
+function leaveConsole(){
+  if (!(cat === 'EMULATORS' && plat !== 'ALL') || modalOpen() || panelOn()) return false;
+  const k = plat; plat = 'ALL'; idx = Math.max(0, consoleItems().findIndex(c => c.platform === k)); sfx('back'); render(); rowAnim(); return true;
+}
+function editConsoleKey(k){
+  const c = CONSOLES.find(x => x.key === k); if (c) { openConsoleWizard(c); return; }
+  if (!cwE(k)) { toast('Esta consola no se puede editar'); return; }
+  openConsoleWizard(); cwPick(k); cw.step = 1; cwLoadApps(); cwRender();
+}
+function openConsoleMenu(g){
+  const k = g.platform, c = CONSOLES.find(x => x.key === k);
+  openPanel(g.title, () => [
+    { i:'🎮', t:'Abrir juegos', s:g.count + ' juego(s)', go:true, f:() => enterConsole(k) },
+    { i:'⚙️', t:'Cambiar emulador o carpeta', s:'Elige otro emulador instalado', go:true, f:() => editConsoleKey(k) },
+    ...(c && c.dir ? [{ i:'🔄', t:'Re-escanear carpeta', s:c.dir, keep:true, f:async () => { try { toast('🔄 Escaneando…'); const n = await scanConsole(c); toast('✅ ' + n + ' juego(s) nuevos'); } catch(e) { toast('⚠️ ' + (e.message || e)); } } }] : [])
+  ]);
+}
 
 loadBuf('scroll'); loadBuf('sel'); if (wizOn) holdIntro(); else startIntroAudio();
 render();
